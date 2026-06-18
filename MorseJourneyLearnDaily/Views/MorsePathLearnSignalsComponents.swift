@@ -9,10 +9,11 @@ struct MorsePathLearnSignalsScreenBackground<Content: View>: View {
 
     var body: some View {
         ZStack {
-            Color(.systemGroupedBackground)
+            MorsePathLearnSignalsTheme.MorsePathLearnSignalsBackgroundGradient
                 .ignoresSafeArea()
             MorsePathLearnSignalsContent
         }
+        .foregroundStyle(MorsePathLearnSignalsTheme.MorsePathLearnSignalsPrimaryText)
     }
 }
 
@@ -27,20 +28,44 @@ struct MorsePathLearnSignalsCard<Content: View>: View {
         MorsePathLearnSignalsContent
             .padding(20)
             .frame(maxWidth: .infinity)
-            .background(Color(.secondarySystemGroupedBackground))
-            .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+            .background(MorsePathLearnSignalsTheme.MorsePathLearnSignalsCard)
+            .clipShape(MorsePathLearnSignalsCardShape)
+            .overlay {
+                MorsePathLearnSignalsCardShape
+                    .stroke(
+                        MorsePathLearnSignalsTheme.MorsePathLearnSignalsCardBorder,
+                        lineWidth: 1
+                    )
+            }
+            .shadow(
+                color: MorsePathLearnSignalsTheme.MorsePathLearnSignalsPrimary.opacity(0.08),
+                radius: 14,
+                y: 8
+            )
+    }
+
+    private var MorsePathLearnSignalsCardShape: RoundedRectangle {
+        RoundedRectangle(cornerRadius: 24, style: .continuous)
     }
 }
 
 struct MorsePathLearnSignalsPrimaryButtonStyle: ButtonStyle {
     func makeBody(configuration MorsePathLearnSignalsConfiguration: Configuration) -> some View {
         MorsePathLearnSignalsConfiguration.label
-            .font(.headline)
+            .font(MorsePathLearnSignalsTypography.MorsePathLearnSignalsHeadline)
             .foregroundStyle(.white)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 14)
-            .background(Color.accentColor.opacity(MorsePathLearnSignalsConfiguration.isPressed ? 0.75 : 1))
+            .background(
+                MorsePathLearnSignalsTheme.MorsePathLearnSignalsButtonGradient
+                    .opacity(MorsePathLearnSignalsConfiguration.isPressed ? 0.75 : 1)
+            )
             .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .shadow(
+                color: MorsePathLearnSignalsTheme.MorsePathLearnSignalsPrimary.opacity(0.22),
+                radius: 10,
+                y: 6
+            )
             .scaleEffect(MorsePathLearnSignalsConfiguration.isPressed ? 0.98 : 1)
     }
 }
@@ -48,12 +73,19 @@ struct MorsePathLearnSignalsPrimaryButtonStyle: ButtonStyle {
 struct MorsePathLearnSignalsSecondaryButtonStyle: ButtonStyle {
     func makeBody(configuration MorsePathLearnSignalsConfiguration: Configuration) -> some View {
         MorsePathLearnSignalsConfiguration.label
-            .font(.subheadline.weight(.semibold))
-            .foregroundStyle(.primary)
+            .font(MorsePathLearnSignalsTypography.MorsePathLearnSignalsMedium(15))
+            .foregroundStyle(MorsePathLearnSignalsTheme.MorsePathLearnSignalsPrimaryText)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 12)
-            .background(Color(.tertiarySystemGroupedBackground))
+            .background(MorsePathLearnSignalsTheme.MorsePathLearnSignalsCard)
             .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .overlay {
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .stroke(
+                        MorsePathLearnSignalsTheme.MorsePathLearnSignalsCardBorder,
+                        lineWidth: 1
+                    )
+            }
             .opacity(MorsePathLearnSignalsConfiguration.isPressed ? 0.7 : 1)
     }
 }
@@ -66,13 +98,13 @@ struct MorsePathLearnSignalsEmptyStateView: View {
     var body: some View {
         VStack(spacing: 10) {
             Image(systemName: MorsePathLearnSignalsIcon)
-                .font(.title2)
-                .foregroundStyle(.secondary)
+                .font(MorsePathLearnSignalsTypography.MorsePathLearnSignalsTitle)
+                .foregroundStyle(MorsePathLearnSignalsTheme.MorsePathLearnSignalsSecondaryText)
             Text(MorsePathLearnSignalsTitle)
-                .font(.headline)
+                .font(MorsePathLearnSignalsTypography.MorsePathLearnSignalsHeadline)
             Text(MorsePathLearnSignalsMessage)
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
+                .font(MorsePathLearnSignalsTypography.MorsePathLearnSignalsMedium(15))
+                .foregroundStyle(MorsePathLearnSignalsTheme.MorsePathLearnSignalsSecondaryText)
                 .multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity, minHeight: 130)
@@ -87,16 +119,22 @@ struct MorsePathLearnSignalsEditorView: View {
         ZStack(alignment: .topLeading) {
             if MorsePathLearnSignalsText.isEmpty {
                 Text(MorsePathLearnSignalsPlaceholder)
-                    .foregroundStyle(.tertiary)
+                    .font(MorsePathLearnSignalsTypography.MorsePathLearnSignalsBody)
+                    .foregroundStyle(MorsePathLearnSignalsTheme.MorsePathLearnSignalsSecondaryText)
                     .padding(.horizontal, 5)
                     .padding(.vertical, 8)
             }
             TextEditor(text: $MorsePathLearnSignalsText)
+                .font(MorsePathLearnSignalsTypography.MorsePathLearnSignalsBody)
                 .scrollContentBackground(.hidden)
                 .frame(minHeight: 112)
         }
         .padding(14)
-        .background(Color(.secondarySystemGroupedBackground))
+        .background(MorsePathLearnSignalsTheme.MorsePathLearnSignalsCard)
         .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                .stroke(MorsePathLearnSignalsTheme.MorsePathLearnSignalsCardBorder, lineWidth: 1)
+        }
     }
 }

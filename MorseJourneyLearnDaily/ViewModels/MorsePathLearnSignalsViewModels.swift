@@ -62,8 +62,21 @@ final class MorsePathLearnSignalsLearnViewModel: ObservableObject {
     }
 }
 
-final class MorsePathLearnSignalsTapViewModel: ObservableObject {
-    @Published var MorsePathLearnSignalsInput = ""
+final class MorsePathLearnSignalsPracticeViewModel: ObservableObject {
+    @Published var MorsePathLearnSignalsTranslationMode:
+        MorsePathLearnSignalsTranslationMode = .textToMorse {
+        didSet {
+            MorsePathLearnSignalsTranslationInput = ""
+            MorsePathLearnSignalsShowsCopiedConfirmation = false
+        }
+    }
+    @Published var MorsePathLearnSignalsTranslationInput = "" {
+        didSet {
+            MorsePathLearnSignalsShowsCopiedConfirmation = false
+        }
+    }
+    @Published var MorsePathLearnSignalsShowsCopiedConfirmation = false
+    @Published var MorsePathLearnSignalsTapInput = ""
     @Published private(set) var MorsePathLearnSignalsFeedbackMessage = ""
     @Published private(set) var MorsePathLearnSignalsFeedbackIsSuccess: Bool?
 
@@ -77,11 +90,39 @@ final class MorsePathLearnSignalsTapViewModel: ObservableObject {
         self.MorsePathLearnSignalsProgressService = MorsePathLearnSignalsProgressService
     }
 
+    var MorsePathLearnSignalsTranslationResult: String {
+        let MorsePathLearnSignalsTrimmedInput =
+            MorsePathLearnSignalsTranslationInput.trimmingCharacters(
+                in: .whitespacesAndNewlines
+            )
+        guard !MorsePathLearnSignalsTrimmedInput.isEmpty else { return "" }
+
+        switch MorsePathLearnSignalsTranslationMode {
+        case .textToMorse:
+            return MorsePathLearnSignalsMorseServiceInstance
+                .MorsePathLearnSignalsTextToMorse(MorsePathLearnSignalsTrimmedInput)
+        case .morseToText:
+            return MorsePathLearnSignalsMorseServiceInstance
+                .MorsePathLearnSignalsMorseToText(MorsePathLearnSignalsTrimmedInput)
+        }
+    }
+
     var MorsePathLearnSignalsRecognizedSymbol: String {
-        guard !MorsePathLearnSignalsInput.isEmpty else { return "—" }
+        guard !MorsePathLearnSignalsTapInput.isEmpty else { return "—" }
         return MorsePathLearnSignalsMorseServiceInstance.MorsePathLearnSignalsSymbolForMorse(
-            MorsePathLearnSignalsInput
+            MorsePathLearnSignalsTapInput
         ) ?? "Unknown"
+    }
+
+    func MorsePathLearnSignalsCopyTranslation() {
+        guard !MorsePathLearnSignalsTranslationResult.isEmpty else { return }
+        UIPasteboard.general.string = MorsePathLearnSignalsTranslationResult
+        MorsePathLearnSignalsShowsCopiedConfirmation = true
+    }
+
+    func MorsePathLearnSignalsClearTranslation() {
+        MorsePathLearnSignalsTranslationInput = ""
+        MorsePathLearnSignalsShowsCopiedConfirmation = false
     }
 
     func MorsePathLearnSignalsAddDot() {
@@ -93,20 +134,20 @@ final class MorsePathLearnSignalsTapViewModel: ObservableObject {
     }
 
     func MorsePathLearnSignalsDeleteLast() {
-        guard !MorsePathLearnSignalsInput.isEmpty else { return }
-        MorsePathLearnSignalsInput.removeLast()
+        guard !MorsePathLearnSignalsTapInput.isEmpty else { return }
+        MorsePathLearnSignalsTapInput.removeLast()
         MorsePathLearnSignalsFeedbackMessage = ""
         MorsePathLearnSignalsFeedbackIsSuccess = nil
     }
 
-    func MorsePathLearnSignalsClear() {
-        MorsePathLearnSignalsInput = ""
+    func MorsePathLearnSignalsClearTapInput() {
+        MorsePathLearnSignalsTapInput = ""
         MorsePathLearnSignalsFeedbackMessage = ""
         MorsePathLearnSignalsFeedbackIsSuccess = nil
     }
 
     func MorsePathLearnSignalsCheck() {
-        guard !MorsePathLearnSignalsInput.isEmpty else {
+        guard !MorsePathLearnSignalsTapInput.isEmpty else {
             MorsePathLearnSignalsFeedbackMessage = "Enter a Morse sequence first."
             MorsePathLearnSignalsFeedbackIsSuccess = false
             return
@@ -114,7 +155,7 @@ final class MorsePathLearnSignalsTapViewModel: ObservableObject {
 
         let MorsePathLearnSignalsIsCorrect =
             MorsePathLearnSignalsMorseServiceInstance.MorsePathLearnSignalsSymbolForMorse(
-                MorsePathLearnSignalsInput
+                MorsePathLearnSignalsTapInput
             ) != nil
         MorsePathLearnSignalsProgressService.MorsePathLearnSignalsSaveAttempt(
             MorsePathLearnSignalsIsCorrect: MorsePathLearnSignalsIsCorrect
@@ -126,72 +167,75 @@ final class MorsePathLearnSignalsTapViewModel: ObservableObject {
     }
 
     private func MorsePathLearnSignalsAppend(_ MorsePathLearnSignalsElement: Character) {
-        guard MorsePathLearnSignalsInput.count < 8 else { return }
-        MorsePathLearnSignalsInput.append(MorsePathLearnSignalsElement)
+        guard MorsePathLearnSignalsTapInput.count < 8 else { return }
+        MorsePathLearnSignalsTapInput.append(MorsePathLearnSignalsElement)
         MorsePathLearnSignalsFeedbackMessage = ""
         MorsePathLearnSignalsFeedbackIsSuccess = nil
         UIImpactFeedbackGenerator(style: .light).impactOccurred()
     }
 }
 
-final class MorsePathLearnSignalsTranslateViewModel: ObservableObject {
-    @Published var MorsePathLearnSignalsMode: MorsePathLearnSignalsTranslationMode = .textToMorse
-    @Published var MorsePathLearnSignalsInput = ""
-    @Published private(set) var MorsePathLearnSignalsResult = ""
-    @Published var MorsePathLearnSignalsShowsCopiedConfirmation = false
-
-    private let MorsePathLearnSignalsMorseServiceInstance = MorsePathLearnSignalsMorseService()
-
-    func MorsePathLearnSignalsTranslate() {
-        let MorsePathLearnSignalsTrimmedInput = MorsePathLearnSignalsInput.trimmingCharacters(
-            in: .whitespacesAndNewlines
-        )
-        guard !MorsePathLearnSignalsTrimmedInput.isEmpty else {
-            MorsePathLearnSignalsResult = ""
-            return
-        }
-
-        switch MorsePathLearnSignalsMode {
-        case .textToMorse:
-            MorsePathLearnSignalsResult =
-                MorsePathLearnSignalsMorseServiceInstance.MorsePathLearnSignalsTextToMorse(
-                    MorsePathLearnSignalsTrimmedInput
-                )
-        case .morseToText:
-            MorsePathLearnSignalsResult =
-                MorsePathLearnSignalsMorseServiceInstance.MorsePathLearnSignalsMorseToText(
-                    MorsePathLearnSignalsTrimmedInput
-                )
-        }
-    }
-
-    func MorsePathLearnSignalsCopy() {
-        guard !MorsePathLearnSignalsResult.isEmpty else { return }
-        UIPasteboard.general.string = MorsePathLearnSignalsResult
-        MorsePathLearnSignalsShowsCopiedConfirmation = true
-    }
-
-    func MorsePathLearnSignalsClear() {
-        MorsePathLearnSignalsInput = ""
-        MorsePathLearnSignalsResult = ""
-        MorsePathLearnSignalsShowsCopiedConfirmation = false
-    }
-}
-
 final class MorsePathLearnSignalsSignalViewModel: ObservableObject {
     @Published var MorsePathLearnSignalsMessage = ""
-    @Published var MorsePathLearnSignalsUsesFlashlight = true
-    @Published var MorsePathLearnSignalsUsesSound = true
-    @Published var MorsePathLearnSignalsRepeats = false
-    @Published var MorsePathLearnSignalsSpeed: MorsePathLearnSignalsSignalSpeed = .medium
+    @Published private(set) var MorsePathLearnSignalsUsesFlashlight: Bool
+    @Published var MorsePathLearnSignalsUsesSound: Bool {
+        didSet { MorsePathLearnSignalsSaveSettings() }
+    }
+    @Published var MorsePathLearnSignalsRepeats: Bool {
+        didSet { MorsePathLearnSignalsSaveSettings() }
+    }
+    @Published var MorsePathLearnSignalsSpeed: MorsePathLearnSignalsSignalSpeed {
+        didSet { MorsePathLearnSignalsSaveSettings() }
+    }
     @Published private(set) var MorsePathLearnSignalsIsSignaling = false
-    @Published var MorsePathLearnSignalsAlertMessage: String?
+    @Published private(set) var MorsePathLearnSignalsIsLightImpulseActive = false
+    @Published var MorsePathLearnSignalsActiveAlert: MorsePathLearnSignalsSignalAlert?
 
     private let MorsePathLearnSignalsMorseServiceInstance = MorsePathLearnSignalsMorseService()
     private let MorsePathLearnSignalsSoundServiceInstance = MorsePathLearnSignalsSoundService()
     private let MorsePathLearnSignalsFlashlightServiceInstance =
         MorsePathLearnSignalsFlashlightService()
-    private var MorsePathLearnSignalsSoundTimer: Timer?
+    private let MorsePathLearnSignalsDefaults: UserDefaults
+    private var MorsePathLearnSignalsSignalTask: Task<Void, Never>?
+
+    private enum MorsePathLearnSignalsSettingsKey {
+        static let MorsePathLearnSignalsUsesFlashlight =
+            "MorsePathLearnSignals.settings.usesFlashlight"
+        static let MorsePathLearnSignalsUsesSound =
+            "MorsePathLearnSignals.settings.usesSound"
+        static let MorsePathLearnSignalsRepeats =
+            "MorsePathLearnSignals.settings.repeats"
+        static let MorsePathLearnSignalsSpeed =
+            "MorsePathLearnSignals.settings.speed"
+    }
+
+    init(MorsePathLearnSignalsDefaults: UserDefaults = .standard) {
+        self.MorsePathLearnSignalsDefaults = MorsePathLearnSignalsDefaults
+        MorsePathLearnSignalsUsesFlashlight = MorsePathLearnSignalsDefaults.bool(
+            forKey: MorsePathLearnSignalsSettingsKey.MorsePathLearnSignalsUsesFlashlight
+        )
+        MorsePathLearnSignalsUsesSound =
+            MorsePathLearnSignalsDefaults.object(
+                forKey: MorsePathLearnSignalsSettingsKey.MorsePathLearnSignalsUsesSound
+            ) == nil
+            ? true
+            : MorsePathLearnSignalsDefaults.bool(
+                forKey: MorsePathLearnSignalsSettingsKey.MorsePathLearnSignalsUsesSound
+            )
+        MorsePathLearnSignalsRepeats = MorsePathLearnSignalsDefaults.bool(
+            forKey: MorsePathLearnSignalsSettingsKey.MorsePathLearnSignalsRepeats
+        )
+        MorsePathLearnSignalsSpeed = MorsePathLearnSignalsSignalSpeed(
+            rawValue: MorsePathLearnSignalsDefaults.string(
+                forKey: MorsePathLearnSignalsSettingsKey.MorsePathLearnSignalsSpeed
+            ) ?? ""
+        ) ?? .medium
+
+        if MorsePathLearnSignalsFlashlightServiceInstance
+            .MorsePathLearnSignalsAuthorizationState() != .authorized {
+            MorsePathLearnSignalsUsesFlashlight = false
+        }
+    }
 
     var MorsePathLearnSignalsPreview: String {
         MorsePathLearnSignalsMorseServiceInstance.MorsePathLearnSignalsTextToMorse(
@@ -199,76 +243,176 @@ final class MorsePathLearnSignalsSignalViewModel: ObservableObject {
         )
     }
 
+    func MorsePathLearnSignalsFlashlightToggleRequested(
+        MorsePathLearnSignalsNewValue: Bool
+    ) {
+        guard MorsePathLearnSignalsNewValue else {
+            MorsePathLearnSignalsUsesFlashlight = false
+            MorsePathLearnSignalsSaveSettings()
+            return
+        }
+
+        switch MorsePathLearnSignalsFlashlightServiceInstance
+            .MorsePathLearnSignalsAuthorizationState() {
+        case .notDetermined:
+            MorsePathLearnSignalsActiveAlert = .flashlightExplanation
+        case .authorized:
+            MorsePathLearnSignalsEnableFlashlightIfAvailable()
+        case .denied, .restricted:
+            MorsePathLearnSignalsActiveAlert = .cameraDenied
+        }
+    }
+
+    func MorsePathLearnSignalsConfirmFlashlightAccess() {
+        Task { @MainActor [weak self] in
+            guard let self else { return }
+            let MorsePathLearnSignalsGranted =
+                await MorsePathLearnSignalsFlashlightServiceInstance
+                    .MorsePathLearnSignalsRequestCameraAccess()
+            if MorsePathLearnSignalsGranted {
+                MorsePathLearnSignalsEnableFlashlightIfAvailable()
+            } else {
+                MorsePathLearnSignalsUsesFlashlight = false
+                MorsePathLearnSignalsSaveSettings()
+                MorsePathLearnSignalsActiveAlert = .cameraDenied
+            }
+        }
+    }
+
+    func MorsePathLearnSignalsOpenSettings() {
+        MorsePathLearnSignalsFlashlightServiceInstance
+            .MorsePathLearnSignalsOpenApplicationSettings()
+    }
+
     func MorsePathLearnSignalsStart() {
         let MorsePathLearnSignalsMorse = MorsePathLearnSignalsPreview
         guard !MorsePathLearnSignalsMorse.isEmpty else {
-            MorsePathLearnSignalsAlertMessage = "Enter a message before starting the signal."
+            MorsePathLearnSignalsActiveAlert = .emptyMessage
             return
         }
         guard MorsePathLearnSignalsUsesFlashlight || MorsePathLearnSignalsUsesSound else {
-            MorsePathLearnSignalsAlertMessage = "Turn on flashlight, sound, or both."
+            MorsePathLearnSignalsActiveAlert = .noOutput
             return
         }
         if MorsePathLearnSignalsUsesFlashlight,
            !MorsePathLearnSignalsFlashlightServiceInstance.MorsePathLearnSignalsIsFlashlightAvailable() {
-            MorsePathLearnSignalsAlertMessage = "Flashlight is not available on this device."
+            MorsePathLearnSignalsUsesFlashlight = false
+            MorsePathLearnSignalsSaveSettings()
+            MorsePathLearnSignalsActiveAlert = .flashlightUnavailable
             return
         }
 
         MorsePathLearnSignalsStop()
         MorsePathLearnSignalsIsSignaling = true
-
-        if MorsePathLearnSignalsUsesFlashlight {
-            MorsePathLearnSignalsFlashlightServiceInstance.MorsePathLearnSignalsStartSignal(
-                morse: MorsePathLearnSignalsMorse,
-                speed: MorsePathLearnSignalsSpeed,
-                repeatSignal: MorsePathLearnSignalsRepeats
-            )
-        }
-        if MorsePathLearnSignalsUsesSound {
-            MorsePathLearnSignalsPlaySoundCycle(MorsePathLearnSignalsMorse)
+        MorsePathLearnSignalsSignalTask = Task { @MainActor [weak self] in
+            await self?.MorsePathLearnSignalsRunSignal(MorsePathLearnSignalsMorse)
         }
     }
 
     func MorsePathLearnSignalsStop() {
-        MorsePathLearnSignalsSoundTimer?.invalidate()
-        MorsePathLearnSignalsSoundTimer = nil
+        MorsePathLearnSignalsSignalTask?.cancel()
+        MorsePathLearnSignalsSignalTask = nil
         MorsePathLearnSignalsSoundServiceInstance.MorsePathLearnSignalsStop()
-        MorsePathLearnSignalsFlashlightServiceInstance.MorsePathLearnSignalsStopSignal()
+        MorsePathLearnSignalsFlashlightServiceInstance.MorsePathLearnSignalsSetTorch(
+            MorsePathLearnSignalsIsOn: false
+        )
+        MorsePathLearnSignalsIsLightImpulseActive = false
         MorsePathLearnSignalsIsSignaling = false
     }
 
-    private func MorsePathLearnSignalsPlaySoundCycle(_ MorsePathLearnSignalsMorse: String) {
-        MorsePathLearnSignalsSoundServiceInstance.MorsePathLearnSignalsPlayMorse(
-            MorsePathLearnSignalsMorse,
-            speed: MorsePathLearnSignalsSpeed
-        )
-        guard MorsePathLearnSignalsRepeats else { return }
+    private func MorsePathLearnSignalsRunSignal(
+        _ MorsePathLearnSignalsMorse: String
+    ) async {
+        repeat {
+            for MorsePathLearnSignalsCharacter in MorsePathLearnSignalsMorse {
+                guard !Task.isCancelled else {
+                    MorsePathLearnSignalsStop()
+                    return
+                }
+                await MorsePathLearnSignalsTransmit(MorsePathLearnSignalsCharacter)
+            }
 
-        let MorsePathLearnSignalsCycleDuration =
-            MorsePathLearnSignalsDuration(of: MorsePathLearnSignalsMorse)
-        MorsePathLearnSignalsSoundTimer = Timer.scheduledTimer(
-            withTimeInterval: MorsePathLearnSignalsCycleDuration,
-            repeats: true
-        ) { [weak self] _ in
-            guard let self, MorsePathLearnSignalsIsSignaling else { return }
-            MorsePathLearnSignalsSoundServiceInstance.MorsePathLearnSignalsPlayMorse(
-                MorsePathLearnSignalsMorse,
-                speed: MorsePathLearnSignalsSpeed
+            guard MorsePathLearnSignalsRepeats, !Task.isCancelled else { break }
+            await MorsePathLearnSignalsSleep(
+                MorsePathLearnSignalsSpeed.MorsePathLearnSignalsUnitDuration * 7
             )
+        }
+        while MorsePathLearnSignalsRepeats && !Task.isCancelled
+
+        MorsePathLearnSignalsStop()
+    }
+
+    private func MorsePathLearnSignalsTransmit(
+        _ MorsePathLearnSignalsCharacter: Character
+    ) async {
+        let MorsePathLearnSignalsUnit = MorsePathLearnSignalsSpeed.MorsePathLearnSignalsUnitDuration
+        switch MorsePathLearnSignalsCharacter {
+        case ".", "-":
+            let MorsePathLearnSignalsDuration =
+                MorsePathLearnSignalsUnit * (MorsePathLearnSignalsCharacter == "." ? 1 : 3)
+            MorsePathLearnSignalsIsLightImpulseActive = true
+            if MorsePathLearnSignalsUsesFlashlight {
+                MorsePathLearnSignalsFlashlightServiceInstance.MorsePathLearnSignalsSetTorch(
+                    MorsePathLearnSignalsIsOn: true
+                )
+            }
+            if MorsePathLearnSignalsUsesSound {
+                MorsePathLearnSignalsSoundServiceInstance.MorsePathLearnSignalsPlayMorse(
+                    String(MorsePathLearnSignalsCharacter),
+                    speed: MorsePathLearnSignalsSpeed
+                )
+            }
+            await MorsePathLearnSignalsSleep(MorsePathLearnSignalsDuration)
+            MorsePathLearnSignalsSoundServiceInstance.MorsePathLearnSignalsStop()
+            MorsePathLearnSignalsFlashlightServiceInstance.MorsePathLearnSignalsSetTorch(
+                MorsePathLearnSignalsIsOn: false
+            )
+            MorsePathLearnSignalsIsLightImpulseActive = false
+            await MorsePathLearnSignalsSleep(MorsePathLearnSignalsUnit)
+        case " ":
+            await MorsePathLearnSignalsSleep(MorsePathLearnSignalsUnit * 2)
+        case "/":
+            await MorsePathLearnSignalsSleep(MorsePathLearnSignalsUnit * 4)
+        default:
+            break
         }
     }
 
-    private func MorsePathLearnSignalsDuration(of MorsePathLearnSignalsMorse: String) -> TimeInterval {
-        let MorsePathLearnSignalsUnit = MorsePathLearnSignalsSpeed.MorsePathLearnSignalsUnitDuration
-        return MorsePathLearnSignalsMorse.reduce(0) { MorsePathLearnSignalsTotal, MorsePathLearnSignalsCharacter in
-            switch MorsePathLearnSignalsCharacter {
-            case ".": return MorsePathLearnSignalsTotal + 2 * MorsePathLearnSignalsUnit
-            case "-": return MorsePathLearnSignalsTotal + 4 * MorsePathLearnSignalsUnit
-            case " ": return MorsePathLearnSignalsTotal + 2 * MorsePathLearnSignalsUnit
-            case "/": return MorsePathLearnSignalsTotal + 4 * MorsePathLearnSignalsUnit
-            default: return MorsePathLearnSignalsTotal
-            }
-        } + 7 * MorsePathLearnSignalsUnit
+    private func MorsePathLearnSignalsSleep(_ MorsePathLearnSignalsDuration: TimeInterval) async {
+        let MorsePathLearnSignalsNanoseconds = UInt64(
+            max(0, MorsePathLearnSignalsDuration) * 1_000_000_000
+        )
+        try? await Task.sleep(nanoseconds: MorsePathLearnSignalsNanoseconds)
+    }
+
+    private func MorsePathLearnSignalsEnableFlashlightIfAvailable() {
+        guard MorsePathLearnSignalsFlashlightServiceInstance
+            .MorsePathLearnSignalsIsFlashlightAvailable() else {
+            MorsePathLearnSignalsUsesFlashlight = false
+            MorsePathLearnSignalsSaveSettings()
+            MorsePathLearnSignalsActiveAlert = .flashlightUnavailable
+            return
+        }
+        MorsePathLearnSignalsUsesFlashlight = true
+        MorsePathLearnSignalsSaveSettings()
+    }
+
+    private func MorsePathLearnSignalsSaveSettings() {
+        MorsePathLearnSignalsDefaults.set(
+            MorsePathLearnSignalsUsesFlashlight,
+            forKey: MorsePathLearnSignalsSettingsKey.MorsePathLearnSignalsUsesFlashlight
+        )
+        MorsePathLearnSignalsDefaults.set(
+            MorsePathLearnSignalsUsesSound,
+            forKey: MorsePathLearnSignalsSettingsKey.MorsePathLearnSignalsUsesSound
+        )
+        MorsePathLearnSignalsDefaults.set(
+            MorsePathLearnSignalsRepeats,
+            forKey: MorsePathLearnSignalsSettingsKey.MorsePathLearnSignalsRepeats
+        )
+        MorsePathLearnSignalsDefaults.set(
+            MorsePathLearnSignalsSpeed.rawValue,
+            forKey: MorsePathLearnSignalsSettingsKey.MorsePathLearnSignalsSpeed
+        )
     }
 }

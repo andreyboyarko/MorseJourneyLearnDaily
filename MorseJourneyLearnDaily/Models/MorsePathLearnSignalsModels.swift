@@ -1,4 +1,5 @@
 import Foundation
+import AVFoundation
 
 enum MorsePathLearnSignalsLearnCategory: String, CaseIterable, Identifiable {
     case letters = "Letters"
@@ -27,6 +28,38 @@ enum MorsePathLearnSignalsSignalSpeed: String, CaseIterable, Identifiable {
 enum MorsePathLearnSignalsTranslationMode: String, CaseIterable, Identifiable {
     case textToMorse = "Text to Morse"
     case morseToText = "Morse to Text"
+
+    var id: String { rawValue }
+}
+
+enum MorsePathLearnSignalsCameraAuthorizationState {
+    case notDetermined
+    case authorized
+    case denied
+    case restricted
+
+    init(MorsePathLearnSignalsStatus: AVAuthorizationStatus) {
+        switch MorsePathLearnSignalsStatus {
+        case .notDetermined:
+            self = .notDetermined
+        case .authorized:
+            self = .authorized
+        case .denied:
+            self = .denied
+        case .restricted:
+            self = .restricted
+        @unknown default:
+            self = .denied
+        }
+    }
+}
+
+enum MorsePathLearnSignalsSignalAlert: String, Identifiable {
+    case emptyMessage
+    case noOutput
+    case flashlightExplanation
+    case cameraDenied
+    case flashlightUnavailable
 
     var id: String { rawValue }
 }

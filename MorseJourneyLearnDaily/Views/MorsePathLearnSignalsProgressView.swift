@@ -66,14 +66,23 @@ struct MorsePathLearnSignalsProgressView: View {
                         MorsePathLearnSignalsCard {
                             VStack(alignment: .leading, spacing: 12) {
                                 Label("Keep going", systemImage: "sparkles")
-                                    .font(.headline)
+                                    .font(
+                                        MorsePathLearnSignalsTypography
+                                            .MorsePathLearnSignalsHeadline
+                                    )
                                 Text(
                                     MorsePathLearnSignalsProgressServiceInstance.MorsePathLearnSignalsPracticeAttempts == 0
                                     ? "Complete your first Tap Practice check to begin building a streak."
                                     : "A little practice every day makes signals feel natural."
                                 )
-                                .font(.subheadline)
-                                .foregroundStyle(.secondary)
+                                .font(
+                                    MorsePathLearnSignalsTypography
+                                        .MorsePathLearnSignalsMedium(15)
+                                )
+                                .foregroundStyle(
+                                    MorsePathLearnSignalsTheme
+                                        .MorsePathLearnSignalsSecondaryText
+                                )
                             }
                         }
 
@@ -81,7 +90,10 @@ struct MorsePathLearnSignalsProgressView: View {
                             MorsePathLearnSignalsShowsResetConfirmation = true
                         } label: {
                             Label("Reset Progress", systemImage: "trash")
-                                .font(.headline)
+                                .font(
+                                    MorsePathLearnSignalsTypography
+                                        .MorsePathLearnSignalsHeadline
+                                )
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 14)
                         }
@@ -92,6 +104,7 @@ struct MorsePathLearnSignalsProgressView: View {
                 }
             }
             .navigationTitle("Progress")
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button {
@@ -145,16 +158,22 @@ private struct MorsePathLearnSignalsMetricCard: View {
                     "\(MorsePathLearnSignalsValue) / \($0)"
                 } ?? "\(MorsePathLearnSignalsValue)"
             )
-            .font(.title2.bold())
+            .font(MorsePathLearnSignalsTypography.MorsePathLearnSignalsDemiBold(22))
             Text(MorsePathLearnSignalsTitle)
-                .font(.caption.weight(.medium))
-                .foregroundStyle(.secondary)
+                .font(MorsePathLearnSignalsTypography.MorsePathLearnSignalsCaption)
+                .foregroundStyle(
+                    MorsePathLearnSignalsTheme.MorsePathLearnSignalsSecondaryText
+                )
                 .lineLimit(2)
         }
         .frame(maxWidth: .infinity, minHeight: 120, alignment: .leading)
         .padding(16)
-        .background(Color(.secondarySystemGroupedBackground))
+        .background(MorsePathLearnSignalsTheme.MorsePathLearnSignalsCard)
         .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                .stroke(MorsePathLearnSignalsTheme.MorsePathLearnSignalsCardBorder, lineWidth: 1)
+        }
     }
 }
 

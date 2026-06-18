@@ -26,7 +26,10 @@ struct MorsePathLearnSignalsLearnView: View {
                                         .MorsePathLearnSignalsCurrentItem
                                         .MorsePathLearnSignalsSymbol
                                 )
-                                .font(.system(size: 92, weight: .bold, design: .rounded))
+                                .font(
+                                    MorsePathLearnSignalsTypography
+                                        .MorsePathLearnSignalsDemiBold(92)
+                                )
                                 .minimumScaleFactor(0.5)
 
                                 Text(
@@ -42,8 +45,14 @@ struct MorsePathLearnSignalsLearnView: View {
                                         .MorsePathLearnSignalsCurrentItem
                                         .MorsePathLearnSignalsSpokenCode
                                 )
-                                .font(.title3.weight(.medium))
-                                .foregroundStyle(.secondary)
+                                .font(
+                                    MorsePathLearnSignalsTypography
+                                        .MorsePathLearnSignalsMedium(20)
+                                )
+                                .foregroundStyle(
+                                    MorsePathLearnSignalsTheme
+                                        .MorsePathLearnSignalsSecondaryText
+                                )
                             }
                             .frame(minHeight: 300)
                         }
@@ -86,14 +95,21 @@ struct MorsePathLearnSignalsLearnView: View {
                                 )
                             )
                             Text(MorsePathLearnSignalsViewModel.MorsePathLearnSignalsPositionText)
-                                .font(.caption.weight(.semibold))
-                                .foregroundStyle(.secondary)
+                                .font(
+                                    MorsePathLearnSignalsTypography
+                                        .MorsePathLearnSignalsCaption
+                                )
+                                .foregroundStyle(
+                                    MorsePathLearnSignalsTheme
+                                        .MorsePathLearnSignalsSecondaryText
+                                )
                         }
                     }
                     .padding()
                 }
             }
             .navigationTitle("Learn Morse")
+            .navigationBarTitleDisplayMode(.inline)
             .onAppear {
                 MorsePathLearnSignalsViewModel.MorsePathLearnSignalsMarkCurrentAsLearned()
             }

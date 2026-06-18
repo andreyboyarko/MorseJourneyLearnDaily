@@ -9,9 +9,17 @@ import SwiftUI
 
 @main
 struct MorsePathLearnSignalsApp: App {
+    init() {
+        MorsePathLearnSignalsTheme.MorsePathLearnSignalsConfigureNavigationAppearance()
+    }
+
     var body: some Scene {
         WindowGroup {
             MorsePathLearnSignalsRootView()
+                .environment(
+                    \.font,
+                    MorsePathLearnSignalsTypography.MorsePathLearnSignalsBody
+                )
         }
     }
 }

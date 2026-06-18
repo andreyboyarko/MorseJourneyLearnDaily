@@ -1,33 +1,44 @@
 import SwiftUI
 
 struct MorsePathLearnSignalsRootView: View {
+    @StateObject private var MorsePathLearnSignalsSplashViewModelInstance =
+        MorsePathLearnSignalsSplashViewModel()
+
     var body: some View {
-        TabView {
-            MorsePathLearnSignalsLearnView()
-                .tabItem {
-                    Label("Learn", systemImage: "book.fill")
-                }
+        ZStack {
+            TabView {
+                MorsePathLearnSignalsLearnView()
+                    .tabItem {
+                        Label("Learn", systemImage: "book.fill")
+                    }
 
-            MorsePathLearnSignalsTapView()
-                .tabItem {
-                    Label("Tap", systemImage: "hand.tap.fill")
-                }
+                MorsePathLearnSignalsPracticeView()
+                    .tabItem {
+                        Label("Practice", systemImage: "hand.tap.fill")
+                    }
 
-            MorsePathLearnSignalsTranslateView()
-                .tabItem {
-                    Label("Translate", systemImage: "arrow.left.arrow.right")
-                }
+                MorsePathLearnSignalsSignalView()
+                    .tabItem {
+                        Label("Signal", systemImage: "flashlight.on.fill")
+                    }
 
-            MorsePathLearnSignalsSignalView()
-                .tabItem {
-                    Label("Signal", systemImage: "flashlight.on.fill")
-                }
+                MorsePathLearnSignalsProgressView()
+                    .tabItem {
+                        Label("Progress", systemImage: "chart.bar.fill")
+                    }
+            }
+            .tint(MorsePathLearnSignalsTheme.MorsePathLearnSignalsPrimary)
 
-            MorsePathLearnSignalsProgressView()
-                .tabItem {
-                    Label("Progress", systemImage: "chart.bar.fill")
-                }
+            if MorsePathLearnSignalsSplashViewModelInstance.MorsePathLearnSignalsIsVisible {
+                MorsePathLearnSignalsSplashView(
+                    MorsePathLearnSignalsViewModel:
+                        MorsePathLearnSignalsSplashViewModelInstance
+                )
+                .zIndex(1)
+            }
         }
-        .tint(.accentColor)
+        .onAppear {
+            MorsePathLearnSignalsSplashViewModelInstance.MorsePathLearnSignalsStart()
+        }
     }
 }
