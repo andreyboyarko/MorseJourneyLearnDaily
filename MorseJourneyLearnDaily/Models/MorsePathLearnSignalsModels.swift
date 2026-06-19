@@ -28,6 +28,7 @@ enum MorsePathLearnSignalsSignalSpeed: String, CaseIterable, Identifiable {
 enum MorsePathLearnSignalsTranslationMode: String, CaseIterable, Identifiable {
     case textToMorse = "Text to Morse"
     case morseToText = "Morse to Text"
+    case tapToText = "Tap to Text"
 
     var id: String { rawValue }
 }

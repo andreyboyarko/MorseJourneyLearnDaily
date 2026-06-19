@@ -4,7 +4,6 @@ struct MorsePathLearnSignalsProgressView: View {
     @ObservedObject private var MorsePathLearnSignalsProgressServiceInstance =
         MorsePathLearnSignalsProgressService.MorsePathLearnSignalsShared
     @State private var MorsePathLearnSignalsShowsResetConfirmation = false
-    @State private var MorsePathLearnSignalsShowsSettings = false
 
     private let MorsePathLearnSignalsColumns = [
         GridItem(.flexible(), spacing: 12),
@@ -12,10 +11,9 @@ struct MorsePathLearnSignalsProgressView: View {
     ]
 
     var body: some View {
-        NavigationView {
-            MorsePathLearnSignalsScreenBackground {
-                ScrollView {
-                    VStack(spacing: 18) {
+        MorsePathLearnSignalsScreenBackground {
+            ScrollView {
+                VStack(spacing: 18) {
                         LazyVGrid(columns: MorsePathLearnSignalsColumns, spacing: 12) {
                             MorsePathLearnSignalsMetricCard(
                                 MorsePathLearnSignalsTitle: "Letters Learned",
@@ -124,37 +122,23 @@ struct MorsePathLearnSignalsProgressView: View {
                         }
                         .buttonStyle(.bordered)
                         .tint(.red)
-                    }
-                    .padding()
                 }
+                .padding()
             }
-            .navigationTitle("Progress")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button {
-                        MorsePathLearnSignalsShowsSettings = true
-                    } label: {
-                        Image(systemName: "gearshape.fill")
-                    }
-                    .accessibilityLabel("Settings")
-                }
+        }
+        .navigationTitle("Progress")
+        .navigationBarTitleDisplayMode(.inline)
+        .confirmationDialog(
+            "Reset all progress?",
+            isPresented: $MorsePathLearnSignalsShowsResetConfirmation,
+            titleVisibility: .visible
+        ) {
+            Button("Reset Progress", role: .destructive) {
+                MorsePathLearnSignalsProgressServiceInstance.MorsePathLearnSignalsResetProgress()
             }
-            .confirmationDialog(
-                "Reset all progress?",
-                isPresented: $MorsePathLearnSignalsShowsResetConfirmation,
-                titleVisibility: .visible
-            ) {
-                Button("Reset Progress", role: .destructive) {
-                    MorsePathLearnSignalsProgressServiceInstance.MorsePathLearnSignalsResetProgress()
-                }
-                Button("Cancel", role: .cancel) {}
-            } message: {
-                Text("Learned symbols, practice statistics, and quiz results will be permanently removed.")
-            }
-            .sheet(isPresented: $MorsePathLearnSignalsShowsSettings) {
-                MorsePathLearnSignalsSettingsView()
-            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("Learned symbols, practice statistics, and quiz results will be permanently removed.")
         }
     }
 
@@ -277,77 +261,6 @@ private struct MorsePathLearnSignalsDifficultSymbolsCard: View {
                     }
                 }
             }
-        }
-    }
-}
-
-private struct MorsePathLearnSignalsSettingsView: View {
-    @Environment(\.dismiss) private var MorsePathLearnSignalsDismiss
-
-    var body: some View {
-        NavigationView {
-            List {
-                Section("About") {
-                    MorsePathLearnSignalsSettingsValueRow(
-                        MorsePathLearnSignalsTitle: "App",
-                        MorsePathLearnSignalsValue: "Morse Path: Learn Signals!"
-                    )
-                    MorsePathLearnSignalsSettingsValueRow(
-                        MorsePathLearnSignalsTitle: "Version",
-                        MorsePathLearnSignalsValue: "1.0"
-                    )
-                }
-
-                Section("Privacy") {
-                    Label {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("Works offline")
-                            Text("No data is collected or shared.")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                        }
-                    } icon: {
-                        Image(systemName: "lock.shield.fill")
-                            .foregroundStyle(.green)
-                    }
-
-                    Label {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("Flashlight access")
-                            Text("The camera is used only to control the flashlight. No photos or videos are captured.")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                        }
-                    } icon: {
-                        Image(systemName: "flashlight.on.fill")
-                            .foregroundStyle(.tint)
-                    }
-                }
-            }
-            .navigationTitle("Settings")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") {
-                        MorsePathLearnSignalsDismiss()
-                    }
-                }
-            }
-        }
-    }
-}
-
-private struct MorsePathLearnSignalsSettingsValueRow: View {
-    let MorsePathLearnSignalsTitle: String
-    let MorsePathLearnSignalsValue: String
-
-    var body: some View {
-        HStack {
-            Text(MorsePathLearnSignalsTitle)
-            Spacer()
-            Text(MorsePathLearnSignalsValue)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.trailing)
         }
     }
 }

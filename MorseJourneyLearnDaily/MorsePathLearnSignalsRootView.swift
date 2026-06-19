@@ -12,14 +12,14 @@ struct MorsePathLearnSignalsRootView: View {
                         Label("Learn", systemImage: "book.fill")
                     }
 
-                MorsePathLearnSignalsPracticeView()
-                    .tabItem {
-                        Label("Practice", systemImage: "hand.tap.fill")
-                    }
-
                 MorsePathLearnSignalsQuizView()
                     .tabItem {
                         Label("Quiz", systemImage: "brain.head.profile")
+                    }
+
+                MorseJourneyLearnDailyTranslateView()
+                    .tabItem {
+                        Label("Translate", systemImage: "character.bubble.fill")
                     }
 
                 MorsePathLearnSignalsSignalView()
@@ -27,9 +27,9 @@ struct MorsePathLearnSignalsRootView: View {
                         Label("Signal", systemImage: "flashlight.on.fill")
                     }
 
-                MorsePathLearnSignalsProgressView()
+                MorseJourneyLearnDailyExploreView()
                     .tabItem {
-                        Label("Progress", systemImage: "chart.bar.fill")
+                        Label("Explore", systemImage: "lightbulb.fill")
                     }
             }
             .tint(MorsePathLearnSignalsTheme.MorsePathLearnSignalsPrimary)

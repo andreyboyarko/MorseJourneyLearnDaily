@@ -2,6 +2,8 @@ import SwiftUI
 
 struct MorsePathLearnSignalsScreenBackground<Content: View>: View {
     private let MorsePathLearnSignalsContent: Content
+    @Environment(\.colorScheme)
+    private var MorseJourneyLearnDailyColorScheme
 
     init(@ViewBuilder MorsePathLearnSignalsContent: () -> Content) {
         self.MorsePathLearnSignalsContent = MorsePathLearnSignalsContent()
@@ -11,6 +13,34 @@ struct MorsePathLearnSignalsScreenBackground<Content: View>: View {
         ZStack {
             MorsePathLearnSignalsTheme.MorsePathLearnSignalsBackgroundGradient
                 .ignoresSafeArea()
+
+            if MorseJourneyLearnDailyColorScheme == .dark {
+                GeometryReader { MorseJourneyLearnDailyGeometry in
+                    Circle()
+                        .fill(Color(red: 0.302, green: 0.722, blue: 1))
+                        .frame(width: 360, height: 360)
+                        .blur(radius: 120)
+                        .opacity(0.13)
+                        .position(
+                            x: MorseJourneyLearnDailyGeometry.size.width + 70,
+                            y: 20
+                        )
+
+                    Circle()
+                        .fill(Color(red: 0.216, green: 0.835, blue: 0.839))
+                        .frame(width: 420, height: 420)
+                        .blur(radius: 140)
+                        .opacity(0.10)
+                        .position(
+                            x: -80,
+                            y: MorseJourneyLearnDailyGeometry.size.height + 70
+                        )
+                }
+                .ignoresSafeArea()
+                .allowsHitTesting(false)
+                .accessibilityHidden(true)
+            }
+
             MorsePathLearnSignalsContent
         }
         .foregroundStyle(MorsePathLearnSignalsTheme.MorsePathLearnSignalsPrimaryText)

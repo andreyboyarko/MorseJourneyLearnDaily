@@ -53,6 +53,21 @@ final class MorsePathLearnSignalsLearnViewModel: ObservableObject {
         MorsePathLearnSignalsMarkCurrentAsLearned()
     }
 
+    func MorseJourneyLearnDailySelectItem(
+        MorseJourneyLearnDailyItem: MorsePathLearnSignalsMorseItem,
+        MorseJourneyLearnDailyCategory: MorsePathLearnSignalsLearnCategory
+    ) {
+        MorsePathLearnSignalsSelectedCategory = MorseJourneyLearnDailyCategory
+
+        guard let MorseJourneyLearnDailyIndex =
+            MorsePathLearnSignalsItems.firstIndex(of: MorseJourneyLearnDailyItem)
+        else { return }
+
+        MorsePathLearnSignalsCurrentIndex = MorseJourneyLearnDailyIndex
+        MorsePathLearnSignalsResetAttempt()
+        MorsePathLearnSignalsMarkCurrentAsLearned()
+    }
+
     func MorsePathLearnSignalsPlayCurrentSound() {
         MorsePathLearnSignalsSoundServiceInstance.MorsePathLearnSignalsPlayMorse(
             MorsePathLearnSignalsCurrentItem.MorsePathLearnSignalsCode,
@@ -117,6 +132,8 @@ final class MorsePathLearnSignalsPracticeViewModel: ObservableObject {
     @Published var MorsePathLearnSignalsTranslationMode:
         MorsePathLearnSignalsTranslationMode = .textToMorse {
         didSet {
+            MorseJourneyLearnDailyCancelPendingTapToTextActions()
+            MorseJourneyLearnDailyStopTapToTextTone()
             MorsePathLearnSignalsTranslationInput = ""
             MorsePathLearnSignalsShowsCopiedConfirmation = false
         }
@@ -130,11 +147,17 @@ final class MorsePathLearnSignalsPracticeViewModel: ObservableObject {
     @Published var MorsePathLearnSignalsTapInput = ""
     @Published private(set) var MorsePathLearnSignalsFeedbackMessage = ""
     @Published private(set) var MorsePathLearnSignalsFeedbackIsSuccess: Bool?
+    @Published private(set) var MorseJourneyLearnDailyTapToTextCode = ""
+    @Published private(set) var MorseJourneyLearnDailyTapToTextResult = ""
+    @Published private(set) var MorseJourneyLearnDailyTapToTextHasError = false
+    @Published private(set) var MorseJourneyLearnDailyTapToTextShowsCopiedConfirmation = false
 
     private let MorsePathLearnSignalsMorseServiceInstance = MorsePathLearnSignalsMorseService()
     private let MorsePathLearnSignalsSoundServiceInstance =
         MorsePathLearnSignalsSoundService()
     private let MorsePathLearnSignalsProgressService: MorsePathLearnSignalsProgressService
+    private var MorseJourneyLearnDailyLetterCommitTask: Task<Void, Never>?
+    private var MorseJourneyLearnDailyWordSpaceTask: Task<Void, Never>?
 
     init(
         MorsePathLearnSignalsProgressService: MorsePathLearnSignalsProgressService =
@@ -144,6 +167,10 @@ final class MorsePathLearnSignalsPracticeViewModel: ObservableObject {
     }
 
     var MorsePathLearnSignalsTranslationResult: String {
+        if MorsePathLearnSignalsTranslationMode == .tapToText {
+            return MorseJourneyLearnDailyTapToTextResult
+        }
+
         let MorsePathLearnSignalsTrimmedInput =
             MorsePathLearnSignalsTranslationInput.trimmingCharacters(
                 in: .whitespacesAndNewlines
@@ -157,6 +184,8 @@ final class MorsePathLearnSignalsPracticeViewModel: ObservableObject {
         case .morseToText:
             return MorsePathLearnSignalsMorseServiceInstance
                 .MorsePathLearnSignalsMorseToText(MorsePathLearnSignalsTrimmedInput)
+        case .tapToText:
+            return ""
         }
     }
 
@@ -167,10 +196,20 @@ final class MorsePathLearnSignalsPracticeViewModel: ObservableObject {
             MorsePathLearnSignalsSource = MorsePathLearnSignalsTranslationResult
         case .morseToText:
             MorsePathLearnSignalsSource = MorsePathLearnSignalsTranslationInput
+        case .tapToText:
+            MorsePathLearnSignalsSource = ""
         }
         return String(
             MorsePathLearnSignalsSource.filter { $0 == "." || $0 == "-" }
         )
+    }
+
+    var MorseJourneyLearnDailyTapTranslation: String {
+        guard !MorsePathLearnSignalsTapInput.isEmpty else { return "" }
+        return MorsePathLearnSignalsMorseServiceInstance
+            .MorsePathLearnSignalsSymbolForMorse(
+                MorsePathLearnSignalsTapInput
+            ) ?? ""
     }
 
     func MorsePathLearnSignalsTapElementMatchesExpected(
@@ -233,6 +272,101 @@ final class MorsePathLearnSignalsPracticeViewModel: ObservableObject {
         MorsePathLearnSignalsSoundServiceInstance.MorsePathLearnSignalsStop()
     }
 
+    func MorseJourneyLearnDailyStartTapToTextTone() {
+        MorseJourneyLearnDailyCancelPendingTapToTextActions()
+        MorsePathLearnSignalsSoundServiceInstance
+            .MorsePathLearnSignalsStartContinuousTone()
+    }
+
+    func MorseJourneyLearnDailyStopTapToTextTone() {
+        MorsePathLearnSignalsSoundServiceInstance.MorsePathLearnSignalsStop()
+    }
+
+    func MorseJourneyLearnDailyAddTapToTextDot() {
+        MorseJourneyLearnDailyAppendTapToTextElement(".")
+    }
+
+    func MorseJourneyLearnDailyAddTapToTextDash() {
+        MorseJourneyLearnDailyAppendTapToTextElement("-")
+    }
+
+    func MorseJourneyLearnDailyCommitTapToTextLetter() {
+        MorseJourneyLearnDailyLetterCommitTask?.cancel()
+        MorseJourneyLearnDailyLetterCommitTask = nil
+        guard !MorseJourneyLearnDailyTapToTextCode.isEmpty else { return }
+
+        guard let MorseJourneyLearnDailySymbol =
+            MorsePathLearnSignalsMorseServiceInstance
+            .MorsePathLearnSignalsSymbolForMorse(
+                MorseJourneyLearnDailyTapToTextCode
+            )
+        else {
+            MorseJourneyLearnDailyTapToTextHasError = true
+            UINotificationFeedbackGenerator().notificationOccurred(.error)
+            return
+        }
+
+        MorseJourneyLearnDailyTapToTextResult.append(
+            contentsOf: MorseJourneyLearnDailySymbol
+        )
+        MorseJourneyLearnDailyTapToTextCode = ""
+        MorseJourneyLearnDailyTapToTextHasError = false
+        MorseJourneyLearnDailyTapToTextShowsCopiedConfirmation = false
+        UINotificationFeedbackGenerator().notificationOccurred(.success)
+        MorseJourneyLearnDailyScheduleAutomaticWordSpace()
+    }
+
+    func MorseJourneyLearnDailyAddTapToTextSpace() {
+        MorseJourneyLearnDailyCancelPendingTapToTextActions()
+
+        if !MorseJourneyLearnDailyTapToTextCode.isEmpty {
+            MorseJourneyLearnDailyCommitTapToTextLetter()
+            guard !MorseJourneyLearnDailyTapToTextHasError else { return }
+        }
+
+        guard !MorseJourneyLearnDailyTapToTextResult.isEmpty,
+              !MorseJourneyLearnDailyTapToTextResult.hasSuffix(" ")
+        else { return }
+        MorseJourneyLearnDailyTapToTextResult.append(" ")
+        MorseJourneyLearnDailyTapToTextShowsCopiedConfirmation = false
+    }
+
+    func MorseJourneyLearnDailyDeleteTapToText() {
+        MorseJourneyLearnDailyCancelPendingTapToTextActions()
+        MorseJourneyLearnDailyTapToTextHasError = false
+        MorseJourneyLearnDailyTapToTextShowsCopiedConfirmation = false
+
+        if !MorseJourneyLearnDailyTapToTextCode.isEmpty {
+            MorseJourneyLearnDailyTapToTextCode.removeLast()
+            if !MorseJourneyLearnDailyTapToTextCode.isEmpty {
+                MorseJourneyLearnDailyScheduleAutomaticLetterCommit()
+            }
+        } else if !MorseJourneyLearnDailyTapToTextResult.isEmpty {
+            MorseJourneyLearnDailyTapToTextResult.removeLast()
+        }
+    }
+
+    func MorseJourneyLearnDailyClearTapToText() {
+        MorseJourneyLearnDailyCancelPendingTapToTextActions()
+        MorseJourneyLearnDailyStopTapToTextTone()
+        MorseJourneyLearnDailyTapToTextCode = ""
+        MorseJourneyLearnDailyTapToTextResult = ""
+        MorseJourneyLearnDailyTapToTextHasError = false
+        MorseJourneyLearnDailyTapToTextShowsCopiedConfirmation = false
+    }
+
+    func MorseJourneyLearnDailyCopyTapToText() {
+        guard !MorseJourneyLearnDailyTapToTextResult.isEmpty else { return }
+        UIPasteboard.general.string =
+            MorseJourneyLearnDailyTapToTextResult
+        MorseJourneyLearnDailyTapToTextShowsCopiedConfirmation = true
+    }
+
+    func MorseJourneyLearnDailyStopTapToText() {
+        MorseJourneyLearnDailyCancelPendingTapToTextActions()
+        MorseJourneyLearnDailyStopTapToTextTone()
+    }
+
     func MorsePathLearnSignalsDeleteLast() {
         guard !MorsePathLearnSignalsTapInput.isEmpty else { return }
         MorsePathLearnSignalsTapInput.removeLast()
@@ -286,6 +420,45 @@ final class MorsePathLearnSignalsPracticeViewModel: ObservableObject {
         MorsePathLearnSignalsFeedbackMessage = ""
         MorsePathLearnSignalsFeedbackIsSuccess = nil
         UIImpactFeedbackGenerator(style: .light).impactOccurred()
+    }
+
+    private func MorseJourneyLearnDailyAppendTapToTextElement(
+        _ MorseJourneyLearnDailyElement: Character
+    ) {
+        MorseJourneyLearnDailyCancelPendingTapToTextActions()
+        guard MorseJourneyLearnDailyTapToTextCode.count < 8 else { return }
+        MorseJourneyLearnDailyTapToTextCode.append(
+            MorseJourneyLearnDailyElement
+        )
+        MorseJourneyLearnDailyTapToTextHasError = false
+        MorseJourneyLearnDailyTapToTextShowsCopiedConfirmation = false
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+        MorseJourneyLearnDailyScheduleAutomaticLetterCommit()
+    }
+
+    private func MorseJourneyLearnDailyScheduleAutomaticLetterCommit() {
+        MorseJourneyLearnDailyLetterCommitTask?.cancel()
+        MorseJourneyLearnDailyLetterCommitTask = Task { @MainActor [weak self] in
+            try? await Task.sleep(nanoseconds: 800_000_000)
+            guard !Task.isCancelled else { return }
+            self?.MorseJourneyLearnDailyCommitTapToTextLetter()
+        }
+    }
+
+    private func MorseJourneyLearnDailyScheduleAutomaticWordSpace() {
+        MorseJourneyLearnDailyWordSpaceTask?.cancel()
+        MorseJourneyLearnDailyWordSpaceTask = Task { @MainActor [weak self] in
+            try? await Task.sleep(nanoseconds: 1_800_000_000)
+            guard !Task.isCancelled else { return }
+            self?.MorseJourneyLearnDailyAddTapToTextSpace()
+        }
+    }
+
+    private func MorseJourneyLearnDailyCancelPendingTapToTextActions() {
+        MorseJourneyLearnDailyLetterCommitTask?.cancel()
+        MorseJourneyLearnDailyLetterCommitTask = nil
+        MorseJourneyLearnDailyWordSpaceTask?.cancel()
+        MorseJourneyLearnDailyWordSpaceTask = nil
     }
 }
 

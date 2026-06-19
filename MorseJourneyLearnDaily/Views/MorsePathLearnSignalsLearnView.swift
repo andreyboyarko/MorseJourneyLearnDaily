@@ -5,6 +5,8 @@ struct MorsePathLearnSignalsLearnView: View {
         MorsePathLearnSignalsLearnViewModel()
     @State private var MorsePathLearnSignalsPressStartedAt: Date?
     @State private var MorsePathLearnSignalsIsPressing = false
+    @State private var MorseJourneyLearnDailyShowsSettings = false
+    @State private var MorseJourneyLearnDailyShowsReference = false
     @Environment(\.sizeCategory) private var MorsePathLearnSignalsSizeCategory
 
     var body: some View {
@@ -32,6 +34,43 @@ struct MorsePathLearnSignalsLearnView: View {
             }
             .navigationTitle("Learn Morse")
             .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItemGroup(placement: .navigationBarTrailing) {
+                    Button {
+                        MorseJourneyLearnDailyShowsReference = true
+                    } label: {
+                        Image(systemName: "list.bullet.rectangle.fill")
+                    }
+                    .accessibilityLabel("Morse Reference")
+
+                    Button {
+                        MorseJourneyLearnDailyShowsSettings = true
+                    } label: {
+                        Image(systemName: "gearshape.fill")
+                    }
+                    .accessibilityLabel("Settings")
+                }
+            }
+            .sheet(isPresented: $MorseJourneyLearnDailyShowsSettings) {
+                MorseJourneyLearnDailySettingsView()
+            }
+            .sheet(isPresented: $MorseJourneyLearnDailyShowsReference) {
+                MorseJourneyLearnDailyMorseReferenceView(
+                    MorseJourneyLearnDailyInitialCategory:
+                        MorsePathLearnSignalsViewModel
+                        .MorsePathLearnSignalsSelectedCategory
+                ) {
+                    MorseJourneyLearnDailyCategory,
+                    MorseJourneyLearnDailyItem in
+                    MorsePathLearnSignalsViewModel
+                        .MorseJourneyLearnDailySelectItem(
+                            MorseJourneyLearnDailyItem:
+                                MorseJourneyLearnDailyItem,
+                            MorseJourneyLearnDailyCategory:
+                                MorseJourneyLearnDailyCategory
+                        )
+                }
+            }
             .onAppear {
                 MorsePathLearnSignalsViewModel
                     .MorsePathLearnSignalsMarkCurrentAsLearned()
@@ -155,6 +194,147 @@ struct MorsePathLearnSignalsLearnView: View {
                     .MorsePathLearnSignalsItems.count - 1
             )
         }
+    }
+}
+
+struct MorseJourneyLearnDailyMorseReferenceView: View {
+    @Environment(\.presentationMode)
+    private var MorseJourneyLearnDailyPresentationMode
+    @State private var MorseJourneyLearnDailySelectedCategory:
+        MorsePathLearnSignalsLearnCategory
+
+    private let MorseJourneyLearnDailyOnSelect:
+        (MorsePathLearnSignalsLearnCategory, MorsePathLearnSignalsMorseItem) -> Void
+    private let MorseJourneyLearnDailyColumns = [
+        GridItem(.adaptive(minimum: 96), spacing: 12)
+    ]
+
+    init(
+        MorseJourneyLearnDailyInitialCategory:
+            MorsePathLearnSignalsLearnCategory,
+        MorseJourneyLearnDailyOnSelect:
+            @escaping (
+                MorsePathLearnSignalsLearnCategory,
+                MorsePathLearnSignalsMorseItem
+            ) -> Void
+    ) {
+        _MorseJourneyLearnDailySelectedCategory = State(
+            initialValue: MorseJourneyLearnDailyInitialCategory
+        )
+        self.MorseJourneyLearnDailyOnSelect =
+            MorseJourneyLearnDailyOnSelect
+    }
+
+    var body: some View {
+        NavigationView {
+            MorsePathLearnSignalsScreenBackground {
+                VStack(spacing: 14) {
+                    Picker(
+                        "Category",
+                        selection: $MorseJourneyLearnDailySelectedCategory
+                    ) {
+                        ForEach(MorsePathLearnSignalsLearnCategory.allCases) {
+                            Text($0.rawValue).tag($0)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                    .padding(.horizontal, 16)
+
+                    ScrollView {
+                        LazyVGrid(
+                            columns: MorseJourneyLearnDailyColumns,
+                            spacing: 12
+                        ) {
+                            ForEach(MorseJourneyLearnDailyItems) {
+                                MorseJourneyLearnDailyReferenceCard(
+                                    MorseJourneyLearnDailyItem: $0
+                                )
+                            }
+                        }
+                        .padding(.horizontal, 16)
+                        .padding(.bottom, 24)
+                    }
+                }
+                .padding(.top, 12)
+            }
+            .navigationTitle("Morse Reference")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Close") {
+                        MorseJourneyLearnDailyPresentationMode
+                            .wrappedValue.dismiss()
+                    }
+                }
+            }
+        }
+    }
+
+    private var MorseJourneyLearnDailyItems:
+        [MorsePathLearnSignalsMorseItem] {
+        MorsePathLearnSignalsMorseDictionary.MorsePathLearnSignalsItems(
+            for: MorseJourneyLearnDailySelectedCategory
+        )
+    }
+
+    private func MorseJourneyLearnDailyReferenceCard(
+        MorseJourneyLearnDailyItem: MorsePathLearnSignalsMorseItem
+    ) -> some View {
+        Button {
+            MorseJourneyLearnDailyOnSelect(
+                MorseJourneyLearnDailySelectedCategory,
+                MorseJourneyLearnDailyItem
+            )
+            MorseJourneyLearnDailyPresentationMode.wrappedValue.dismiss()
+        } label: {
+            VStack(spacing: 8) {
+                Text(MorseJourneyLearnDailyItem.MorsePathLearnSignalsSymbol)
+                    .font(
+                        MorsePathLearnSignalsTypography
+                            .MorsePathLearnSignalsDemiBold(28)
+                    )
+                    .foregroundStyle(
+                        MorsePathLearnSignalsTheme
+                            .MorsePathLearnSignalsPrimaryText
+                    )
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.65)
+
+                Text(MorseJourneyLearnDailyItem.MorsePathLearnSignalsCode)
+                    .font(
+                        .system(
+                            size: 18,
+                            weight: .semibold,
+                            design: .monospaced
+                        )
+                    )
+                    .foregroundStyle(
+                        MorsePathLearnSignalsTheme.MorsePathLearnSignalsPrimary
+                    )
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
+            }
+            .frame(maxWidth: .infinity, minHeight: 92)
+            .padding(.horizontal, 8)
+            .background(MorsePathLearnSignalsTheme.MorsePathLearnSignalsCard)
+            .clipShape(
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+            )
+            .overlay {
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .stroke(
+                        MorsePathLearnSignalsTheme
+                            .MorsePathLearnSignalsCardBorder,
+                        lineWidth: 1
+                    )
+            }
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(
+            "\(MorseJourneyLearnDailyItem.MorsePathLearnSignalsSymbol), "
+                + "\(MorseJourneyLearnDailyItem.MorsePathLearnSignalsSpokenCode)"
+        )
+        .accessibilityHint("Select this item in Learn")
     }
 }
 

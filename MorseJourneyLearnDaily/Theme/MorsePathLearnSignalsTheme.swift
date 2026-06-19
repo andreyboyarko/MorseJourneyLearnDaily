@@ -5,6 +5,7 @@ enum MorsePathLearnSignalsTheme {
     static let MorsePathLearnSignalsPrimary = Color("MorsePathLearnSignalsPrimary")
     static let MorsePathLearnSignalsSecondary = Color("MorsePathLearnSignalsSecondary")
     static let MorsePathLearnSignalsBackgroundTop = Color("MorsePathLearnSignalsBackgroundTop")
+    static let MorsePathLearnSignalsBackgroundCenter = Color("MorsePathLearnSignalsBackgroundCenter")
     static let MorsePathLearnSignalsBackgroundBottom = Color("MorsePathLearnSignalsBackgroundBottom")
     static let MorsePathLearnSignalsCard = Color("MorsePathLearnSignalsCard")
     static let MorsePathLearnSignalsCardBorder = Color("MorsePathLearnSignalsCardBorder")
@@ -17,10 +18,11 @@ enum MorsePathLearnSignalsTheme {
         LinearGradient(
             colors: [
                 MorsePathLearnSignalsBackgroundTop,
+                MorsePathLearnSignalsBackgroundCenter,
                 MorsePathLearnSignalsBackgroundBottom
             ],
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
+            startPoint: .top,
+            endPoint: .bottom
         )
     }
 

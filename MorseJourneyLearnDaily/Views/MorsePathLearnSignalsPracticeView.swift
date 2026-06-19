@@ -1,11 +1,10 @@
 import SwiftUI
 
-struct MorsePathLearnSignalsPracticeView: View {
+struct MorseJourneyLearnDailyTapView: View {
     @StateObject private var MorsePathLearnSignalsViewModel =
         MorsePathLearnSignalsPracticeViewModel()
     @State private var MorsePathLearnSignalsPressStartedAt: Date?
     @State private var MorsePathLearnSignalsIsPressing = false
-    @FocusState private var MorsePathLearnSignalsTranslationEditorIsFocused: Bool
     @Environment(\.sizeCategory) private var MorsePathLearnSignalsSizeCategory
 
     var body: some View {
@@ -27,7 +26,7 @@ struct MorsePathLearnSignalsPracticeView: View {
                     }
                 }
             }
-            .navigationTitle("Practice")
+            .navigationTitle("Tap")
             .navigationBarTitleDisplayMode(.inline)
             .safeAreaInset(edge: .bottom, spacing: 0) {
                 MorsePathLearnSignalsInputDock(
@@ -46,14 +45,6 @@ struct MorsePathLearnSignalsPracticeView: View {
         MorsePathLearnSignalsUsesCompactLayout: Bool
     ) -> some View {
         VStack(spacing: MorsePathLearnSignalsUsesCompactLayout ? 8 : 11) {
-            MorsePathLearnSignalsTranslatorSection(
-                MorsePathLearnSignalsViewModel: MorsePathLearnSignalsViewModel,
-                MorsePathLearnSignalsTranslationEditorIsFocused:
-                    $MorsePathLearnSignalsTranslationEditorIsFocused,
-                MorsePathLearnSignalsUsesCompactLayout:
-                    MorsePathLearnSignalsUsesCompactLayout
-            )
-
             MorsePathLearnSignalsPressButton(
                 MorsePathLearnSignalsUsesCompactLayout:
                     MorsePathLearnSignalsUsesCompactLayout
@@ -129,7 +120,6 @@ struct MorsePathLearnSignalsPracticeView: View {
             DragGesture(minimumDistance: 0)
                 .onChanged { _ in
                     if MorsePathLearnSignalsPressStartedAt == nil {
-                        MorsePathLearnSignalsTranslationEditorIsFocused = false
                         MorsePathLearnSignalsPressStartedAt = Date()
                         MorsePathLearnSignalsIsPressing = true
                         MorsePathLearnSignalsViewModel
@@ -172,19 +162,27 @@ struct MorsePathLearnSignalsPracticeView: View {
                             .MorsePathLearnSignalsSecondaryText
                     )
                 Spacer()
-                if !MorsePathLearnSignalsViewModel
-                    .MorsePathLearnSignalsExpectedTapSignal.isEmpty {
+                HStack(spacing: 8) {
+                    Text("Translation")
+                        .font(
+                            MorsePathLearnSignalsTypography
+                                .MorsePathLearnSignalsCaption
+                        )
+                        .foregroundStyle(
+                            MorsePathLearnSignalsTheme
+                                .MorsePathLearnSignalsSecondaryText
+                        )
+
                     Text(
-                        "\(MorsePathLearnSignalsViewModel.MorsePathLearnSignalsTapInput.count) / \(MorsePathLearnSignalsViewModel.MorsePathLearnSignalsExpectedTapSignal.count)"
+                        MorsePathLearnSignalsViewModel
+                            .MorseJourneyLearnDailyTapTranslation
                     )
                     .font(
                         MorsePathLearnSignalsTypography
-                            .MorsePathLearnSignalsCaption
+                            .MorsePathLearnSignalsDemiBold(22)
                     )
-                    .foregroundStyle(
-                        MorsePathLearnSignalsTheme
-                            .MorsePathLearnSignalsSecondaryText
-                    )
+                    .foregroundStyle(.tint)
+                    .frame(minWidth: 24)
                 }
             }
 
@@ -314,13 +312,40 @@ struct MorsePathLearnSignalsPracticeView: View {
     }
 
     private func MorsePathLearnSignalsAddDot() {
-        MorsePathLearnSignalsTranslationEditorIsFocused = false
         MorsePathLearnSignalsViewModel.MorsePathLearnSignalsAddDot()
     }
 
     private func MorsePathLearnSignalsAddDash() {
-        MorsePathLearnSignalsTranslationEditorIsFocused = false
         MorsePathLearnSignalsViewModel.MorsePathLearnSignalsAddDash()
+    }
+}
+
+struct MorseJourneyLearnDailyTranslateView: View {
+    @StateObject private var MorseJourneyLearnDailyViewModel =
+        MorsePathLearnSignalsPracticeViewModel()
+    @FocusState private var MorseJourneyLearnDailyEditorIsFocused: Bool
+
+    var body: some View {
+        NavigationView {
+            MorsePathLearnSignalsScreenBackground {
+                ScrollView {
+                    MorsePathLearnSignalsTranslatorSection(
+                        MorsePathLearnSignalsViewModel:
+                            MorseJourneyLearnDailyViewModel,
+                        MorsePathLearnSignalsTranslationEditorIsFocused:
+                            $MorseJourneyLearnDailyEditorIsFocused,
+                        MorsePathLearnSignalsUsesCompactLayout: false
+                    )
+                    .padding()
+                }
+            }
+            .navigationTitle("Translate")
+            .navigationBarTitleDisplayMode(.inline)
+            .onDisappear {
+                MorseJourneyLearnDailyViewModel
+                    .MorseJourneyLearnDailyStopTapToText()
+            }
+        }
     }
 }
 
@@ -343,45 +368,74 @@ private struct MorsePathLearnSignalsTranslatorSection: View {
             }
             .pickerStyle(.segmented)
 
-            ZStack(alignment: .topLeading) {
-                if MorsePathLearnSignalsViewModel
-                    .MorsePathLearnSignalsTranslationInput.isEmpty {
-                    Text(
-                        MorsePathLearnSignalsViewModel.MorsePathLearnSignalsTranslationMode
-                            == .textToMorse
-                            ? "Enter text to use as a Morse guide"
-                            : "Enter Morse code to decode"
-                    )
-                    .font(MorsePathLearnSignalsTypography.MorsePathLearnSignalsBody)
-                    .foregroundStyle(
-                        MorsePathLearnSignalsTheme.MorsePathLearnSignalsSecondaryText
-                    )
-                    .padding(.horizontal, 5)
-                    .padding(.vertical, 8)
-                }
+            if MorsePathLearnSignalsViewModel
+                .MorsePathLearnSignalsTranslationMode == .tapToText {
+                MorseJourneyLearnDailyTapToTextSection(
+                    MorseJourneyLearnDailyViewModel:
+                        MorsePathLearnSignalsViewModel
+                )
+            } else {
+                ZStack(alignment: .topLeading) {
+                    if MorsePathLearnSignalsViewModel
+                        .MorsePathLearnSignalsTranslationInput.isEmpty {
+                        Text(
+                            MorsePathLearnSignalsViewModel
+                                .MorsePathLearnSignalsTranslationMode
+                                == .textToMorse
+                                ? "Enter text to use as a Morse guide"
+                                : "Enter Morse code to decode"
+                        )
+                        .font(
+                            MorsePathLearnSignalsTypography
+                                .MorsePathLearnSignalsBody
+                        )
+                        .foregroundStyle(
+                            MorsePathLearnSignalsTheme
+                                .MorsePathLearnSignalsSecondaryText
+                        )
+                        .padding(.horizontal, 5)
+                        .padding(.vertical, 8)
+                    }
 
-                TextEditor(
-                    text:
-                        $MorsePathLearnSignalsViewModel.MorsePathLearnSignalsTranslationInput
+                    TextEditor(
+                        text:
+                            $MorsePathLearnSignalsViewModel
+                            .MorsePathLearnSignalsTranslationInput
+                    )
+                    .font(
+                        MorsePathLearnSignalsTypography
+                            .MorsePathLearnSignalsBody
+                    )
+                    .focused(
+                        MorsePathLearnSignalsTranslationEditorIsFocused
+                    )
+                    .frame(
+                        height:
+                            MorsePathLearnSignalsUsesCompactLayout ? 54 : 66
+                    )
+                }
+                .padding(
+                    MorsePathLearnSignalsUsesCompactLayout ? 8 : 10
                 )
-                .font(MorsePathLearnSignalsTypography.MorsePathLearnSignalsBody)
-                .focused(MorsePathLearnSignalsTranslationEditorIsFocused)
-                .frame(
-                    height: MorsePathLearnSignalsUsesCompactLayout ? 54 : 66
+                .background(
+                    MorsePathLearnSignalsTheme.MorsePathLearnSignalsCard
                 )
-            }
-            .padding(MorsePathLearnSignalsUsesCompactLayout ? 8 : 10)
-            .background(MorsePathLearnSignalsTheme.MorsePathLearnSignalsCard)
-            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-            .overlay {
-                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .clipShape(
+                    RoundedRectangle(cornerRadius: 18, style: .continuous)
+                )
+                .overlay {
+                    RoundedRectangle(
+                        cornerRadius: 18,
+                        style: .continuous
+                    )
                     .stroke(
-                        MorsePathLearnSignalsTheme.MorsePathLearnSignalsCardBorder,
+                        MorsePathLearnSignalsTheme
+                            .MorsePathLearnSignalsCardBorder,
                         lineWidth: 1
                     )
-            }
+                }
 
-            VStack(alignment: .leading, spacing: 6) {
+                VStack(alignment: .leading, spacing: 6) {
                     HStack {
                         Text("Live translation")
                             .font(
@@ -447,22 +501,307 @@ private struct MorsePathLearnSignalsTranslatorSection: View {
                         .frame(maxWidth: .infinity, alignment: .leading)
                     }
                 }
-            .padding(MorsePathLearnSignalsUsesCompactLayout ? 11 : 14)
-            .frame(
-                maxWidth: .infinity,
-                minHeight: MorsePathLearnSignalsUsesCompactLayout ? 68 : 76,
-                alignment: .top
-            )
-            .background(MorsePathLearnSignalsTheme.MorsePathLearnSignalsCard)
-            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-            .overlay {
-                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .padding(
+                    MorsePathLearnSignalsUsesCompactLayout ? 11 : 14
+                )
+                .frame(
+                    maxWidth: .infinity,
+                    minHeight:
+                        MorsePathLearnSignalsUsesCompactLayout ? 68 : 76,
+                    alignment: .top
+                )
+                .background(
+                    MorsePathLearnSignalsTheme.MorsePathLearnSignalsCard
+                )
+                .clipShape(
+                    RoundedRectangle(cornerRadius: 18, style: .continuous)
+                )
+                .overlay {
+                    RoundedRectangle(
+                        cornerRadius: 18,
+                        style: .continuous
+                    )
                     .stroke(
-                        MorsePathLearnSignalsTheme.MorsePathLearnSignalsCardBorder,
+                        MorsePathLearnSignalsTheme
+                            .MorsePathLearnSignalsCardBorder,
+                        lineWidth: 1
+                    )
+                }
+            }
+        }
+    }
+}
+
+private struct MorseJourneyLearnDailyTapToTextSection: View {
+    @ObservedObject var MorseJourneyLearnDailyViewModel:
+        MorsePathLearnSignalsPracticeViewModel
+    @State private var MorseJourneyLearnDailyPressStartedAt: Date?
+    @State private var MorseJourneyLearnDailyIsPressing = false
+
+    var body: some View {
+        VStack(spacing: 14) {
+            MorsePathLearnSignalsCard {
+                VStack(alignment: .leading, spacing: 10) {
+                    HStack {
+                        Text("Your message")
+                            .font(
+                                MorsePathLearnSignalsTypography
+                                    .MorsePathLearnSignalsCaption
+                            )
+                            .foregroundStyle(
+                                MorsePathLearnSignalsTheme
+                                    .MorsePathLearnSignalsSecondaryText
+                            )
+
+                        Spacer()
+
+                        Button {
+                            MorseJourneyLearnDailyViewModel
+                                .MorseJourneyLearnDailyCopyTapToText()
+                        } label: {
+                            Image(
+                                systemName:
+                                    MorseJourneyLearnDailyViewModel
+                                    .MorseJourneyLearnDailyTapToTextShowsCopiedConfirmation
+                                    ? "checkmark"
+                                    : "doc.on.doc"
+                            )
+                        }
+                        .disabled(
+                            MorseJourneyLearnDailyViewModel
+                                .MorseJourneyLearnDailyTapToTextResult.isEmpty
+                        )
+                    }
+
+                    Text(
+                        MorseJourneyLearnDailyViewModel
+                            .MorseJourneyLearnDailyTapToTextResult.isEmpty
+                        ? "Your tapped message appears here."
+                        : MorseJourneyLearnDailyViewModel
+                            .MorseJourneyLearnDailyTapToTextResult
+                    )
+                    .font(
+                        MorseJourneyLearnDailyViewModel
+                            .MorseJourneyLearnDailyTapToTextResult.isEmpty
+                        ? MorsePathLearnSignalsTypography
+                            .MorsePathLearnSignalsMedium(16)
+                        : MorsePathLearnSignalsTypography
+                            .MorsePathLearnSignalsDemiBold(25)
+                    )
+                    .foregroundStyle(
+                        MorseJourneyLearnDailyViewModel
+                            .MorseJourneyLearnDailyTapToTextResult.isEmpty
+                        ? MorsePathLearnSignalsTheme
+                            .MorsePathLearnSignalsSecondaryText
+                        : MorsePathLearnSignalsTheme
+                            .MorsePathLearnSignalsPrimaryText
+                    )
+                    .frame(
+                        maxWidth: .infinity,
+                        minHeight: 72,
+                        alignment: .topLeading
+                    )
+                    .textSelection(.enabled)
+                }
+            }
+
+            HStack(spacing: 18) {
+                VStack(alignment: .leading, spacing: 5) {
+                    Text("Current letter")
+                        .font(
+                            MorsePathLearnSignalsTypography
+                                .MorsePathLearnSignalsCaption
+                        )
+                        .foregroundStyle(
+                            MorsePathLearnSignalsTheme
+                                .MorsePathLearnSignalsSecondaryText
+                        )
+
+                    Text(
+                        MorseJourneyLearnDailyViewModel
+                            .MorseJourneyLearnDailyTapToTextCode.isEmpty
+                        ? "—"
+                        : MorseJourneyLearnDailyViewModel
+                            .MorseJourneyLearnDailyTapToTextCode
+                    )
+                    .font(
+                        .system(
+                            size: 34,
+                            weight: .bold,
+                            design: .monospaced
+                        )
+                    )
+                    .foregroundStyle(
+                        MorseJourneyLearnDailyViewModel
+                            .MorseJourneyLearnDailyTapToTextHasError
+                        ? Color.red
+                        : MorsePathLearnSignalsTheme
+                            .MorsePathLearnSignalsPrimaryText
+                    )
+
+                    if MorseJourneyLearnDailyViewModel
+                        .MorseJourneyLearnDailyTapToTextHasError {
+                        Text("Unknown signal — edit or clear it.")
+                            .font(
+                                MorsePathLearnSignalsTypography
+                                    .MorsePathLearnSignalsCaption
+                            )
+                            .foregroundStyle(.red)
+                    } else {
+                        Text("Auto-commits after 0.8 seconds")
+                            .font(
+                                MorsePathLearnSignalsTypography
+                                    .MorsePathLearnSignalsCaption
+                            )
+                            .foregroundStyle(
+                                MorsePathLearnSignalsTheme
+                                    .MorsePathLearnSignalsSecondaryText
+                            )
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+                MorseJourneyLearnDailyTapToTextPressButton
+            }
+            .padding(16)
+            .background(MorsePathLearnSignalsTheme.MorsePathLearnSignalsCard)
+            .clipShape(
+                RoundedRectangle(cornerRadius: 20, style: .continuous)
+            )
+            .overlay {
+                RoundedRectangle(cornerRadius: 20, style: .continuous)
+                    .stroke(
+                        MorsePathLearnSignalsTheme
+                            .MorsePathLearnSignalsCardBorder,
                         lineWidth: 1
                     )
             }
+
+            HStack(spacing: 8) {
+                Button("Commit Letter") {
+                    MorseJourneyLearnDailyViewModel
+                        .MorseJourneyLearnDailyCommitTapToTextLetter()
+                }
+                .buttonStyle(MorsePathLearnSignalsSecondaryButtonStyle())
+
+                Button("Space") {
+                    MorseJourneyLearnDailyViewModel
+                        .MorseJourneyLearnDailyAddTapToTextSpace()
+                }
+                .buttonStyle(MorsePathLearnSignalsSecondaryButtonStyle())
+            }
+
+            HStack(spacing: 8) {
+                Button {
+                    MorseJourneyLearnDailyViewModel
+                        .MorseJourneyLearnDailyDeleteTapToText()
+                } label: {
+                    Label("Delete", systemImage: "delete.left")
+                }
+                .buttonStyle(MorsePathLearnSignalsSecondaryButtonStyle())
+
+                Button {
+                    MorseJourneyLearnDailyViewModel
+                        .MorseJourneyLearnDailyClearTapToText()
+                } label: {
+                    Label("Clear", systemImage: "trash")
+                }
+                .buttonStyle(MorsePathLearnSignalsSecondaryButtonStyle())
+
+                Button {
+                    MorseJourneyLearnDailyViewModel
+                        .MorseJourneyLearnDailyCopyTapToText()
+                } label: {
+                    Label(
+                        MorseJourneyLearnDailyViewModel
+                            .MorseJourneyLearnDailyTapToTextShowsCopiedConfirmation
+                        ? "Copied"
+                        : "Copy",
+                        systemImage:
+                            MorseJourneyLearnDailyViewModel
+                            .MorseJourneyLearnDailyTapToTextShowsCopiedConfirmation
+                            ? "checkmark"
+                            : "doc.on.doc"
+                    )
+                }
+                .buttonStyle(MorsePathLearnSignalsSecondaryButtonStyle())
+                .disabled(
+                    MorseJourneyLearnDailyViewModel
+                        .MorseJourneyLearnDailyTapToTextResult.isEmpty
+                )
+            }
         }
+    }
+
+    private var MorseJourneyLearnDailyTapToTextPressButton: some View {
+        ZStack {
+            Circle()
+                .fill(
+                    MorsePathLearnSignalsTheme
+                        .MorsePathLearnSignalsButtonGradient
+                        .opacity(
+                            MorseJourneyLearnDailyIsPressing ? 0.76 : 1
+                        )
+                )
+                .overlay {
+                    Circle()
+                        .stroke(Color.white.opacity(0.28), lineWidth: 2)
+                }
+
+            VStack(spacing: 3) {
+                Image(systemName: "hand.tap.fill")
+                    .font(.system(size: 28))
+                Text("Press / Hold")
+                    .font(
+                        MorsePathLearnSignalsTypography
+                            .MorsePathLearnSignalsMedium(11)
+                    )
+            }
+            .foregroundStyle(.white)
+        }
+        .frame(width: 112, height: 112)
+        .contentShape(Circle())
+        .scaleEffect(MorseJourneyLearnDailyIsPressing ? 0.95 : 1)
+        .gesture(
+            DragGesture(minimumDistance: 0)
+                .onChanged { _ in
+                    if MorseJourneyLearnDailyPressStartedAt == nil {
+                        MorseJourneyLearnDailyPressStartedAt = Date()
+                        MorseJourneyLearnDailyIsPressing = true
+                        MorseJourneyLearnDailyViewModel
+                            .MorseJourneyLearnDailyStartTapToTextTone()
+                    }
+                }
+                .onEnded { _ in
+                    guard let MorseJourneyLearnDailyStartedAt =
+                        MorseJourneyLearnDailyPressStartedAt
+                    else { return }
+
+                    let MorseJourneyLearnDailyDuration =
+                        Date().timeIntervalSince(
+                            MorseJourneyLearnDailyStartedAt
+                        )
+                    MorseJourneyLearnDailyPressStartedAt = nil
+                    MorseJourneyLearnDailyIsPressing = false
+                    MorseJourneyLearnDailyViewModel
+                        .MorseJourneyLearnDailyStopTapToTextTone()
+
+                    if MorseJourneyLearnDailyDuration >= 0.35 {
+                        MorseJourneyLearnDailyViewModel
+                            .MorseJourneyLearnDailyAddTapToTextDash()
+                    } else {
+                        MorseJourneyLearnDailyViewModel
+                            .MorseJourneyLearnDailyAddTapToTextDot()
+                    }
+                }
+        )
+        .animation(
+            .spring(response: 0.22, dampingFraction: 0.72),
+            value: MorseJourneyLearnDailyIsPressing
+        )
+        .accessibilityLabel(
+            "Tap to enter a dot. Hold to enter a dash."
+        )
     }
 }
 

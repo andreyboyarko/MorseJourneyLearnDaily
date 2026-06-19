@@ -256,7 +256,7 @@
 				INFOPLIST_FILE = "MorsePathLearnSignals-Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = "Morse Path: Learn Signals!";
 				INFOPLIST_KEY_NSCameraUsageDescription = "This app uses the camera flashlight to transmit Morse code signals.";
-				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = NO;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
@@ -294,7 +294,7 @@
 				INFOPLIST_FILE = "MorsePathLearnSignals-Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = "Morse Path: Learn Signals!";
 				INFOPLIST_KEY_NSCameraUsageDescription = "This app uses the camera flashlight to transmit Morse code signals.";
-				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = NO;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
