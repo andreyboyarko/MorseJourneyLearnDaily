@@ -7,7 +7,7 @@ struct MorsePathLearnSignalsSignalView: View {
     @State private var MorsePathLearnSignalsShowsSettings = false
 
     var body: some View {
-        NavigationStack {
+        NavigationView {
             MorsePathLearnSignalsScreenBackground {
                 ScrollView {
                     VStack(spacing: 16) {
@@ -45,7 +45,13 @@ struct MorsePathLearnSignalsSignalView: View {
                                                 .MorsePathLearnSignalsSecondaryText
                                         )
                                     Text(MorsePathLearnSignalsViewModel.MorsePathLearnSignalsPreview)
-                                        .font(.system(.body, design: .monospaced, weight: .semibold))
+                                        .font(
+                                            .system(
+                                                size: 17,
+                                                weight: .semibold,
+                                                design: .monospaced
+                                            )
+                                        )
                                         .textSelection(.enabled)
                                         .frame(maxWidth: .infinity, alignment: .leading)
                                 }
@@ -249,7 +255,7 @@ private struct MorsePathLearnSignalsSignalSettingsView: View {
         MorsePathLearnSignalsSignalViewModel
 
     var body: some View {
-        NavigationStack {
+        NavigationView {
             MorsePathLearnSignalsScreenBackground {
                 ScrollView {
                     MorsePathLearnSignalsCard {

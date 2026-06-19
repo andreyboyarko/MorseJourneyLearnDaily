@@ -12,7 +12,7 @@ struct MorsePathLearnSignalsProgressView: View {
     ]
 
     var body: some View {
-        NavigationStack {
+        NavigationView {
             MorsePathLearnSignalsScreenBackground {
                 ScrollView {
                     VStack(spacing: 18) {
@@ -61,7 +61,30 @@ struct MorsePathLearnSignalsProgressView: View {
                                     MorsePathLearnSignalsProgressServiceInstance.MorsePathLearnSignalsBestStreak,
                                 MorsePathLearnSignalsIcon: "flame.fill"
                             )
+                            MorsePathLearnSignalsMetricCard(
+                                MorsePathLearnSignalsTitle: "Quiz Sessions",
+                                MorsePathLearnSignalsValue:
+                                    MorsePathLearnSignalsProgressServiceInstance
+                                    .MorsePathLearnSignalsCompletedQuizSessions,
+                                MorsePathLearnSignalsIcon: "brain.head.profile"
+                            )
+                            MorsePathLearnSignalsMetricCard(
+                                MorsePathLearnSignalsTitle: "Best Quiz Score",
+                                MorsePathLearnSignalsValue:
+                                    MorsePathLearnSignalsBestQuizScore,
+                                MorsePathLearnSignalsTotal: 10,
+                                MorsePathLearnSignalsIcon: "trophy.fill"
+                            )
                         }
+
+                        MorsePathLearnSignalsDifficultSymbolsCard(
+                            MorsePathLearnSignalsSymbols:
+                                Array(
+                                    MorsePathLearnSignalsProgressServiceInstance
+                                        .MorsePathLearnSignalsMostDifficultQuizSymbols
+                                        .prefix(5)
+                                )
+                        )
 
                         MorsePathLearnSignalsCard {
                             VStack(alignment: .leading, spacing: 12) {
@@ -72,7 +95,9 @@ struct MorsePathLearnSignalsProgressView: View {
                                     )
                                 Text(
                                     MorsePathLearnSignalsProgressServiceInstance.MorsePathLearnSignalsPracticeAttempts == 0
-                                    ? "Complete your first Tap Practice check to begin building a streak."
+                                        && MorsePathLearnSignalsProgressServiceInstance
+                                            .MorsePathLearnSignalsCompletedQuizSessions == 0
+                                    ? "Complete your first practice or quiz session to begin building progress."
                                     : "A little practice every day makes signals feel natural."
                                 )
                                 .font(
@@ -125,7 +150,7 @@ struct MorsePathLearnSignalsProgressView: View {
                 }
                 Button("Cancel", role: .cancel) {}
             } message: {
-                Text("Learned symbols and practice statistics will be permanently removed.")
+                Text("Learned symbols, practice statistics, and quiz results will be permanently removed.")
             }
             .sheet(isPresented: $MorsePathLearnSignalsShowsSettings) {
                 MorsePathLearnSignalsSettingsView()
@@ -139,6 +164,11 @@ struct MorsePathLearnSignalsProgressView: View {
         Set(MorsePathLearnSignalsDictionary.keys)
             .intersection(MorsePathLearnSignalsProgressServiceInstance.MorsePathLearnSignalsLearnedSymbols)
             .count
+    }
+
+    private var MorsePathLearnSignalsBestQuizScore: Int {
+        MorsePathLearnSignalsProgressServiceInstance
+            .MorsePathLearnSignalsQuizBestScores.values.max() ?? 0
     }
 }
 
@@ -177,15 +207,95 @@ private struct MorsePathLearnSignalsMetricCard: View {
     }
 }
 
+private struct MorsePathLearnSignalsDifficultSymbolsCard: View {
+    let MorsePathLearnSignalsSymbols: [(String, Int)]
+
+    var body: some View {
+        MorsePathLearnSignalsCard {
+            VStack(alignment: .leading, spacing: 14) {
+                Label("Needs more practice", systemImage: "target")
+                    .font(
+                        MorsePathLearnSignalsTypography
+                            .MorsePathLearnSignalsHeadline
+                    )
+
+                if MorsePathLearnSignalsSymbols.isEmpty {
+                    Text(
+                        "Quiz mistakes will appear here so you know what to review."
+                    )
+                    .font(
+                        MorsePathLearnSignalsTypography
+                            .MorsePathLearnSignalsMedium(15)
+                    )
+                    .foregroundStyle(
+                        MorsePathLearnSignalsTheme
+                            .MorsePathLearnSignalsSecondaryText
+                    )
+                } else {
+                    ForEach(
+                        Array(MorsePathLearnSignalsSymbols.enumerated()),
+                        id: \.offset
+                    ) { MorsePathLearnSignalsIndex, MorsePathLearnSignalsEntry in
+                        HStack {
+                            Text(MorsePathLearnSignalsEntry.0)
+                                .font(
+                                    MorsePathLearnSignalsTypography
+                                        .MorsePathLearnSignalsDemiBold(22)
+                                )
+                                .frame(width: 36, alignment: .leading)
+                            Text(
+                                MorsePathLearnSignalsMorseDictionary
+                                    .MorsePathLearnSignalsAll[
+                                        MorsePathLearnSignalsEntry.0
+                                    ] ?? ""
+                            )
+                            .font(
+                                .system(
+                                    size: 16,
+                                    weight: .semibold,
+                                    design: .monospaced
+                                )
+                            )
+                            Spacer()
+                            Text(
+                                "\(MorsePathLearnSignalsEntry.1) \(MorsePathLearnSignalsEntry.1 == 1 ? "mistake" : "mistakes")"
+                            )
+                            .font(
+                                MorsePathLearnSignalsTypography
+                                    .MorsePathLearnSignalsCaption
+                            )
+                            .foregroundStyle(
+                                MorsePathLearnSignalsTheme
+                                    .MorsePathLearnSignalsSecondaryText
+                            )
+                        }
+
+                        if MorsePathLearnSignalsIndex
+                            < MorsePathLearnSignalsSymbols.count - 1 {
+                            Divider()
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
 private struct MorsePathLearnSignalsSettingsView: View {
     @Environment(\.dismiss) private var MorsePathLearnSignalsDismiss
 
     var body: some View {
-        NavigationStack {
+        NavigationView {
             List {
                 Section("About") {
-                    LabeledContent("App", value: "Morse Path: Learn Signals!")
-                    LabeledContent("Version", value: "1.0")
+                    MorsePathLearnSignalsSettingsValueRow(
+                        MorsePathLearnSignalsTitle: "App",
+                        MorsePathLearnSignalsValue: "Morse Path: Learn Signals!"
+                    )
+                    MorsePathLearnSignalsSettingsValueRow(
+                        MorsePathLearnSignalsTitle: "Version",
+                        MorsePathLearnSignalsValue: "1.0"
+                    )
                 }
 
                 Section("Privacy") {
@@ -223,6 +333,21 @@ private struct MorsePathLearnSignalsSettingsView: View {
                     }
                 }
             }
+        }
+    }
+}
+
+private struct MorsePathLearnSignalsSettingsValueRow: View {
+    let MorsePathLearnSignalsTitle: String
+    let MorsePathLearnSignalsValue: String
+
+    var body: some View {
+        HStack {
+            Text(MorsePathLearnSignalsTitle)
+            Spacer()
+            Text(MorsePathLearnSignalsValue)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.trailing)
         }
     }
 }

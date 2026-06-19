@@ -7,10 +7,13 @@ final class MorsePathLearnSignalsLearnViewModel: ObservableObject {
     @Published var MorsePathLearnSignalsSelectedCategory: MorsePathLearnSignalsLearnCategory = .letters {
         didSet {
             MorsePathLearnSignalsCurrentIndex = 0
+            MorsePathLearnSignalsResetAttempt()
             MorsePathLearnSignalsMarkCurrentAsLearned()
         }
     }
     @Published private(set) var MorsePathLearnSignalsCurrentIndex = 0
+    @Published private(set) var MorsePathLearnSignalsAttempt = ""
+    @Published private(set) var MorsePathLearnSignalsAttemptIsCorrect: Bool?
 
     let MorsePathLearnSignalsProgressService: MorsePathLearnSignalsProgressService
     private let MorsePathLearnSignalsSoundServiceInstance = MorsePathLearnSignalsSoundService()
@@ -39,12 +42,14 @@ final class MorsePathLearnSignalsLearnViewModel: ObservableObject {
     func MorsePathLearnSignalsShowPrevious() {
         guard MorsePathLearnSignalsCurrentIndex > 0 else { return }
         MorsePathLearnSignalsCurrentIndex -= 1
+        MorsePathLearnSignalsResetAttempt()
         MorsePathLearnSignalsMarkCurrentAsLearned()
     }
 
     func MorsePathLearnSignalsShowNext() {
         guard MorsePathLearnSignalsCurrentIndex < MorsePathLearnSignalsItems.count - 1 else { return }
         MorsePathLearnSignalsCurrentIndex += 1
+        MorsePathLearnSignalsResetAttempt()
         MorsePathLearnSignalsMarkCurrentAsLearned()
     }
 
@@ -55,10 +60,56 @@ final class MorsePathLearnSignalsLearnViewModel: ObservableObject {
         )
     }
 
+    func MorsePathLearnSignalsStartAttemptTone() {
+        guard MorsePathLearnSignalsAttemptIsCorrect == nil else { return }
+        MorsePathLearnSignalsSoundServiceInstance
+            .MorsePathLearnSignalsStartContinuousTone()
+    }
+
+    func MorsePathLearnSignalsStopAttemptTone() {
+        MorsePathLearnSignalsSoundServiceInstance.MorsePathLearnSignalsStop()
+    }
+
     func MorsePathLearnSignalsMarkCurrentAsLearned() {
         MorsePathLearnSignalsProgressService.MorsePathLearnSignalsSaveLearnedSymbol(
             MorsePathLearnSignalsCurrentItem.MorsePathLearnSignalsSymbol
         )
+    }
+
+    func MorsePathLearnSignalsAddAttemptDot() {
+        MorsePathLearnSignalsAppendAttempt(".")
+    }
+
+    func MorsePathLearnSignalsAddAttemptDash() {
+        MorsePathLearnSignalsAppendAttempt("-")
+    }
+
+    func MorsePathLearnSignalsResetAttempt() {
+        MorsePathLearnSignalsStopAttemptTone()
+        MorsePathLearnSignalsAttempt = ""
+        MorsePathLearnSignalsAttemptIsCorrect = nil
+    }
+
+    private func MorsePathLearnSignalsAppendAttempt(
+        _ MorsePathLearnSignalsElement: Character
+    ) {
+        guard MorsePathLearnSignalsAttemptIsCorrect == nil,
+              MorsePathLearnSignalsAttempt.count
+                < MorsePathLearnSignalsCurrentItem.MorsePathLearnSignalsCode.count
+        else { return }
+
+        MorsePathLearnSignalsAttempt.append(MorsePathLearnSignalsElement)
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+
+        if MorsePathLearnSignalsAttempt.count
+            == MorsePathLearnSignalsCurrentItem.MorsePathLearnSignalsCode.count {
+            MorsePathLearnSignalsAttemptIsCorrect =
+                MorsePathLearnSignalsAttempt
+                == MorsePathLearnSignalsCurrentItem.MorsePathLearnSignalsCode
+            UINotificationFeedbackGenerator().notificationOccurred(
+                MorsePathLearnSignalsAttemptIsCorrect == true ? .success : .error
+            )
+        }
     }
 }
 
@@ -81,6 +132,8 @@ final class MorsePathLearnSignalsPracticeViewModel: ObservableObject {
     @Published private(set) var MorsePathLearnSignalsFeedbackIsSuccess: Bool?
 
     private let MorsePathLearnSignalsMorseServiceInstance = MorsePathLearnSignalsMorseService()
+    private let MorsePathLearnSignalsSoundServiceInstance =
+        MorsePathLearnSignalsSoundService()
     private let MorsePathLearnSignalsProgressService: MorsePathLearnSignalsProgressService
 
     init(
@@ -107,11 +160,49 @@ final class MorsePathLearnSignalsPracticeViewModel: ObservableObject {
         }
     }
 
-    var MorsePathLearnSignalsRecognizedSymbol: String {
-        guard !MorsePathLearnSignalsTapInput.isEmpty else { return "—" }
-        return MorsePathLearnSignalsMorseServiceInstance.MorsePathLearnSignalsSymbolForMorse(
-            MorsePathLearnSignalsTapInput
-        ) ?? "Unknown"
+    var MorsePathLearnSignalsExpectedTapSignal: String {
+        let MorsePathLearnSignalsSource: String
+        switch MorsePathLearnSignalsTranslationMode {
+        case .textToMorse:
+            MorsePathLearnSignalsSource = MorsePathLearnSignalsTranslationResult
+        case .morseToText:
+            MorsePathLearnSignalsSource = MorsePathLearnSignalsTranslationInput
+        }
+        return String(
+            MorsePathLearnSignalsSource.filter { $0 == "." || $0 == "-" }
+        )
+    }
+
+    func MorsePathLearnSignalsTapElementMatchesExpected(
+        at MorsePathLearnSignalsIndex: Int
+    ) -> Bool? {
+        guard !MorsePathLearnSignalsExpectedTapSignal.isEmpty,
+              MorsePathLearnSignalsTapInput.indices.contains(
+                MorsePathLearnSignalsTapInput.index(
+                    MorsePathLearnSignalsTapInput.startIndex,
+                    offsetBy: MorsePathLearnSignalsIndex
+                )
+              )
+        else { return nil }
+
+        guard MorsePathLearnSignalsIndex
+            < MorsePathLearnSignalsExpectedTapSignal.count
+        else { return false }
+
+        let MorsePathLearnSignalsInputIndex =
+            MorsePathLearnSignalsTapInput.index(
+                MorsePathLearnSignalsTapInput.startIndex,
+                offsetBy: MorsePathLearnSignalsIndex
+            )
+        let MorsePathLearnSignalsExpectedIndex =
+            MorsePathLearnSignalsExpectedTapSignal.index(
+                MorsePathLearnSignalsExpectedTapSignal.startIndex,
+                offsetBy: MorsePathLearnSignalsIndex
+            )
+        return MorsePathLearnSignalsTapInput[MorsePathLearnSignalsInputIndex]
+            == MorsePathLearnSignalsExpectedTapSignal[
+                MorsePathLearnSignalsExpectedIndex
+            ]
     }
 
     func MorsePathLearnSignalsCopyTranslation() {
@@ -131,6 +222,15 @@ final class MorsePathLearnSignalsPracticeViewModel: ObservableObject {
 
     func MorsePathLearnSignalsAddDash() {
         MorsePathLearnSignalsAppend("-")
+    }
+
+    func MorsePathLearnSignalsStartTapTone() {
+        MorsePathLearnSignalsSoundServiceInstance
+            .MorsePathLearnSignalsStartContinuousTone()
+    }
+
+    func MorsePathLearnSignalsStopTapTone() {
+        MorsePathLearnSignalsSoundServiceInstance.MorsePathLearnSignalsStop()
     }
 
     func MorsePathLearnSignalsDeleteLast() {
@@ -153,21 +253,35 @@ final class MorsePathLearnSignalsPracticeViewModel: ObservableObject {
             return
         }
 
-        let MorsePathLearnSignalsIsCorrect =
-            MorsePathLearnSignalsMorseServiceInstance.MorsePathLearnSignalsSymbolForMorse(
+        let MorsePathLearnSignalsIsCorrect: Bool
+        if MorsePathLearnSignalsExpectedTapSignal.isEmpty {
+            MorsePathLearnSignalsIsCorrect =
+                MorsePathLearnSignalsMorseServiceInstance
+                .MorsePathLearnSignalsSymbolForMorse(
+                    MorsePathLearnSignalsTapInput
+                ) != nil
+        } else {
+            MorsePathLearnSignalsIsCorrect =
                 MorsePathLearnSignalsTapInput
-            ) != nil
+                == MorsePathLearnSignalsExpectedTapSignal
+        }
         MorsePathLearnSignalsProgressService.MorsePathLearnSignalsSaveAttempt(
             MorsePathLearnSignalsIsCorrect: MorsePathLearnSignalsIsCorrect
         )
         MorsePathLearnSignalsFeedbackIsSuccess = MorsePathLearnSignalsIsCorrect
-        MorsePathLearnSignalsFeedbackMessage = MorsePathLearnSignalsIsCorrect
-            ? "Valid signal. Nice work!"
-            : "This sequence is not in the dictionary."
+        if MorsePathLearnSignalsExpectedTapSignal.isEmpty {
+            MorsePathLearnSignalsFeedbackMessage = MorsePathLearnSignalsIsCorrect
+                ? "Valid signal. Nice work!"
+                : "This sequence is not in the dictionary."
+        } else {
+            MorsePathLearnSignalsFeedbackMessage = MorsePathLearnSignalsIsCorrect
+                ? "Signal matches the translation."
+                : "Red underlined elements do not match."
+        }
     }
 
     private func MorsePathLearnSignalsAppend(_ MorsePathLearnSignalsElement: Character) {
-        guard MorsePathLearnSignalsTapInput.count < 8 else { return }
+        guard MorsePathLearnSignalsTapInput.count < 24 else { return }
         MorsePathLearnSignalsTapInput.append(MorsePathLearnSignalsElement)
         MorsePathLearnSignalsFeedbackMessage = ""
         MorsePathLearnSignalsFeedbackIsSuccess = nil

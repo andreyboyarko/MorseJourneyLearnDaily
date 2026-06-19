@@ -126,7 +126,6 @@ struct MorsePathLearnSignalsEditorView: View {
             }
             TextEditor(text: $MorsePathLearnSignalsText)
                 .font(MorsePathLearnSignalsTypography.MorsePathLearnSignalsBody)
-                .scrollContentBackground(.hidden)
                 .frame(minHeight: 112)
         }
         .padding(14)

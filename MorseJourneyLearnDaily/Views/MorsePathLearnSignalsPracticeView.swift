@@ -6,29 +6,26 @@ struct MorsePathLearnSignalsPracticeView: View {
     @State private var MorsePathLearnSignalsPressStartedAt: Date?
     @State private var MorsePathLearnSignalsIsPressing = false
     @FocusState private var MorsePathLearnSignalsTranslationEditorIsFocused: Bool
+    @Environment(\.sizeCategory) private var MorsePathLearnSignalsSizeCategory
 
     var body: some View {
-        NavigationStack {
+        NavigationView {
             MorsePathLearnSignalsScreenBackground {
-                ScrollView {
-                    VStack(spacing: 16) {
-                        MorsePathLearnSignalsTranslatorSection(
-                            MorsePathLearnSignalsViewModel: MorsePathLearnSignalsViewModel,
-                            MorsePathLearnSignalsTranslationEditorIsFocused:
-                                $MorsePathLearnSignalsTranslationEditorIsFocused
+                GeometryReader { MorsePathLearnSignalsGeometry in
+                    if MorsePathLearnSignalsSizeCategory.isAccessibilityCategory {
+                        ScrollView {
+                            MorsePathLearnSignalsContent(
+                                MorsePathLearnSignalsUsesCompactLayout: false
+                            )
+                            .padding(.bottom, 12)
+                        }
+                    } else {
+                        MorsePathLearnSignalsContent(
+                            MorsePathLearnSignalsUsesCompactLayout:
+                                MorsePathLearnSignalsGeometry.size.height < 650
                         )
-
-                        MorsePathLearnSignalsTapInstructions
-                        MorsePathLearnSignalsPressButton
-                        MorsePathLearnSignalsRecognitionCard
-                        MorsePathLearnSignalsFeedback
-                        MorsePathLearnSignalsTapActions
                     }
-                    .padding(.horizontal)
-                    .padding(.top, 8)
-                    .padding(.bottom, 104)
                 }
-                .scrollDismissesKeyboard(.interactively)
             }
             .navigationTitle("Practice")
             .navigationBarTitleDisplayMode(.inline)
@@ -38,32 +35,61 @@ struct MorsePathLearnSignalsPracticeView: View {
                     MorsePathLearnSignalsAddDash: MorsePathLearnSignalsAddDash
                 )
             }
-        }
-    }
-
-    private var MorsePathLearnSignalsTapInstructions: some View {
-        MorsePathLearnSignalsCard {
-            HStack(spacing: 18) {
-                Label("Short tap = dot", systemImage: "circle.fill")
-                Label("Long press = dash", systemImage: "minus")
+            .onDisappear {
+                MorsePathLearnSignalsViewModel
+                    .MorsePathLearnSignalsStopTapTone()
             }
-            .font(MorsePathLearnSignalsTypography.MorsePathLearnSignalsMedium(14))
-            .foregroundStyle(
-                MorsePathLearnSignalsTheme.MorsePathLearnSignalsSecondaryText
-            )
-            .frame(maxWidth: .infinity)
         }
     }
 
-    private var MorsePathLearnSignalsPressButton: some View {
-        ZStack {
+    private func MorsePathLearnSignalsContent(
+        MorsePathLearnSignalsUsesCompactLayout: Bool
+    ) -> some View {
+        VStack(spacing: MorsePathLearnSignalsUsesCompactLayout ? 8 : 11) {
+            MorsePathLearnSignalsTranslatorSection(
+                MorsePathLearnSignalsViewModel: MorsePathLearnSignalsViewModel,
+                MorsePathLearnSignalsTranslationEditorIsFocused:
+                    $MorsePathLearnSignalsTranslationEditorIsFocused,
+                MorsePathLearnSignalsUsesCompactLayout:
+                    MorsePathLearnSignalsUsesCompactLayout
+            )
+
+            MorsePathLearnSignalsPressButton(
+                MorsePathLearnSignalsUsesCompactLayout:
+                    MorsePathLearnSignalsUsesCompactLayout
+            )
+            MorsePathLearnSignalsRecognitionCard(
+                MorsePathLearnSignalsUsesCompactLayout:
+                    MorsePathLearnSignalsUsesCompactLayout
+            )
+            MorsePathLearnSignalsFeedback
+            MorsePathLearnSignalsTapActions
+
+            if !MorsePathLearnSignalsSizeCategory.isAccessibilityCategory {
+                Spacer(minLength: 0)
+            }
+        }
+        .padding(.horizontal, MorsePathLearnSignalsUsesCompactLayout ? 12 : 16)
+        .padding(.top, MorsePathLearnSignalsUsesCompactLayout ? 4 : 8)
+    }
+
+    private func MorsePathLearnSignalsPressButton(
+        MorsePathLearnSignalsUsesCompactLayout: Bool
+    ) -> some View {
+        let MorsePathLearnSignalsDiameter: CGFloat =
+            MorsePathLearnSignalsUsesCompactLayout ? 108 : 124
+
+        return ZStack {
             Circle()
                 .fill(
                     MorsePathLearnSignalsTheme
                         .MorsePathLearnSignalsButtonGradient
                         .opacity(MorsePathLearnSignalsIsPressing ? 0.78 : 1)
                 )
-                .frame(width: 154, height: 154)
+                .frame(
+                    width: MorsePathLearnSignalsDiameter,
+                    height: MorsePathLearnSignalsDiameter
+                )
                 .overlay {
                     Circle()
                         .stroke(Color.white.opacity(0.28), lineWidth: 2)
@@ -71,23 +97,32 @@ struct MorsePathLearnSignalsPracticeView: View {
                 .shadow(
                     color: MorsePathLearnSignalsTheme
                         .MorsePathLearnSignalsPrimary.opacity(0.3),
-                    radius: MorsePathLearnSignalsIsPressing ? 8 : 16,
-                    y: 8
+                    radius: MorsePathLearnSignalsIsPressing ? 6 : 10,
+                    y: 5
                 )
 
-            VStack(spacing: 5) {
+            VStack(spacing: 3) {
                 Image("MorzeHand")
                     .resizable()
                     .scaledToFit()
-                    .frame(width: 58, height: 58)
+                    .frame(
+                        width: MorsePathLearnSignalsUsesCompactLayout ? 38 : 46,
+                        height: MorsePathLearnSignalsUsesCompactLayout ? 38 : 46
+                    )
                 Text("Press / Hold")
                     .font(
                         MorsePathLearnSignalsTypography
-                            .MorsePathLearnSignalsDemiBold(15)
+                            .MorsePathLearnSignalsDemiBold(
+                                MorsePathLearnSignalsUsesCompactLayout ? 12 : 13
+                            )
                     )
             }
             .foregroundStyle(.white)
         }
+        .frame(
+            width: MorsePathLearnSignalsDiameter,
+            height: MorsePathLearnSignalsDiameter
+        )
         .contentShape(Circle())
         .scaleEffect(MorsePathLearnSignalsIsPressing ? 0.95 : 1)
         .gesture(
@@ -97,6 +132,8 @@ struct MorsePathLearnSignalsPracticeView: View {
                         MorsePathLearnSignalsTranslationEditorIsFocused = false
                         MorsePathLearnSignalsPressStartedAt = Date()
                         MorsePathLearnSignalsIsPressing = true
+                        MorsePathLearnSignalsViewModel
+                            .MorsePathLearnSignalsStartTapTone()
                     }
                 }
                 .onEnded { _ in
@@ -105,6 +142,8 @@ struct MorsePathLearnSignalsPracticeView: View {
                     )
                     MorsePathLearnSignalsIsPressing = false
                     MorsePathLearnSignalsPressStartedAt = nil
+                    MorsePathLearnSignalsViewModel
+                        .MorsePathLearnSignalsStopTapTone()
                     if MorsePathLearnSignalsDuration >= 0.35 {
                         MorsePathLearnSignalsViewModel.MorsePathLearnSignalsAddDash()
                     } else {
@@ -118,45 +157,118 @@ struct MorsePathLearnSignalsPracticeView: View {
         )
     }
 
-    private var MorsePathLearnSignalsRecognitionCard: some View {
-        MorsePathLearnSignalsCard {
-            HStack(spacing: 16) {
-                VStack(alignment: .leading, spacing: 5) {
-                    Text("Your signal")
-                        .font(MorsePathLearnSignalsTypography.MorsePathLearnSignalsCaption)
-                        .foregroundStyle(
-                            MorsePathLearnSignalsTheme.MorsePathLearnSignalsSecondaryText
-                        )
-                    Text(
-                        MorsePathLearnSignalsViewModel.MorsePathLearnSignalsTapInput.isEmpty
-                            ? "—"
-                            : MorsePathLearnSignalsViewModel.MorsePathLearnSignalsTapInput
+    private func MorsePathLearnSignalsRecognitionCard(
+        MorsePathLearnSignalsUsesCompactLayout: Bool
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Text("Your signal")
+                    .font(
+                        MorsePathLearnSignalsTypography
+                            .MorsePathLearnSignalsCaption
                     )
-                    .font(.system(size: 32, weight: .bold, design: .monospaced))
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.65)
+                    .foregroundStyle(
+                        MorsePathLearnSignalsTheme
+                            .MorsePathLearnSignalsSecondaryText
+                    )
+                Spacer()
+                if !MorsePathLearnSignalsViewModel
+                    .MorsePathLearnSignalsExpectedTapSignal.isEmpty {
+                    Text(
+                        "\(MorsePathLearnSignalsViewModel.MorsePathLearnSignalsTapInput.count) / \(MorsePathLearnSignalsViewModel.MorsePathLearnSignalsExpectedTapSignal.count)"
+                    )
+                    .font(
+                        MorsePathLearnSignalsTypography
+                            .MorsePathLearnSignalsCaption
+                    )
+                    .foregroundStyle(
+                        MorsePathLearnSignalsTheme
+                            .MorsePathLearnSignalsSecondaryText
+                    )
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
-
-                Divider()
-                    .frame(height: 54)
-
-                VStack(alignment: .trailing, spacing: 5) {
-                    Text("Symbol")
-                        .font(MorsePathLearnSignalsTypography.MorsePathLearnSignalsCaption)
-                        .foregroundStyle(
-                            MorsePathLearnSignalsTheme.MorsePathLearnSignalsSecondaryText
-                        )
-                    Text(MorsePathLearnSignalsViewModel.MorsePathLearnSignalsRecognizedSymbol)
-                        .font(
-                            MorsePathLearnSignalsTypography
-                                .MorsePathLearnSignalsDemiBold(28)
-                        )
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.65)
-                }
-                .frame(maxWidth: .infinity, alignment: .trailing)
             }
+
+            if MorsePathLearnSignalsViewModel.MorsePathLearnSignalsTapInput.isEmpty {
+                Text("—")
+                    .font(
+                        .system(
+                            size:
+                                MorsePathLearnSignalsUsesCompactLayout ? 26 : 30,
+                            weight: .bold,
+                            design: .monospaced
+                        )
+                    )
+                    .frame(minHeight: 42)
+            } else {
+                LazyVGrid(
+                    columns: [
+                        GridItem(
+                            .adaptive(
+                                minimum:
+                                    MorsePathLearnSignalsUsesCompactLayout
+                                    ? 18
+                                    : 22
+                            ),
+                            spacing: 4
+                        )
+                    ],
+                    alignment: .leading,
+                    spacing: 3
+                ) {
+                    ForEach(
+                        Array(
+                            MorsePathLearnSignalsViewModel
+                                .MorsePathLearnSignalsTapInput.enumerated()
+                        ),
+                        id: \.offset
+                    ) { MorsePathLearnSignalsIndex, MorsePathLearnSignalsElement in
+                        let MorsePathLearnSignalsMatches =
+                            MorsePathLearnSignalsViewModel
+                            .MorsePathLearnSignalsTapElementMatchesExpected(
+                                at: MorsePathLearnSignalsIndex
+                            )
+                        VStack(spacing: 0) {
+                            Text(String(MorsePathLearnSignalsElement))
+                                .font(
+                                    .system(
+                                        size:
+                                            MorsePathLearnSignalsUsesCompactLayout
+                                            ? 25
+                                            : 29,
+                                        weight: .bold,
+                                        design: .monospaced
+                                    )
+                                )
+                                .foregroundStyle(
+                                    MorsePathLearnSignalsMatches == nil
+                                    ? MorsePathLearnSignalsTheme
+                                        .MorsePathLearnSignalsPrimaryText
+                                    : MorsePathLearnSignalsMatches == true
+                                    ? Color.green
+                                    : Color.red
+                                )
+
+                            Rectangle()
+                                .fill(Color.red)
+                                .frame(height: 2)
+                                .opacity(
+                                    MorsePathLearnSignalsMatches == false ? 1 : 0
+                                )
+                        }
+                    }
+                }
+                .frame(minHeight: 42, alignment: .topLeading)
+            }
+        }
+        .padding(MorsePathLearnSignalsUsesCompactLayout ? 13 : 16)
+        .background(MorsePathLearnSignalsTheme.MorsePathLearnSignalsCard)
+        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                .stroke(
+                    MorsePathLearnSignalsTheme.MorsePathLearnSignalsCardBorder,
+                    lineWidth: 1
+                )
         }
     }
 
@@ -181,25 +293,23 @@ struct MorsePathLearnSignalsPracticeView: View {
     }
 
     private var MorsePathLearnSignalsTapActions: some View {
-        VStack(spacing: 10) {
-            HStack(spacing: 10) {
-                Button("Clear") {
-                    MorsePathLearnSignalsViewModel.MorsePathLearnSignalsClearTapInput()
-                }
-                .buttonStyle(MorsePathLearnSignalsSecondaryButtonStyle())
-
-                Button {
-                    MorsePathLearnSignalsViewModel.MorsePathLearnSignalsDeleteLast()
-                } label: {
-                    Label("Delete", systemImage: "delete.left")
-                }
-                .buttonStyle(MorsePathLearnSignalsSecondaryButtonStyle())
+        HStack(spacing: 8) {
+            Button("Clear") {
+                MorsePathLearnSignalsViewModel.MorsePathLearnSignalsClearTapInput()
             }
+            .buttonStyle(MorsePathLearnSignalsSecondaryButtonStyle())
+
+            Button {
+                MorsePathLearnSignalsViewModel.MorsePathLearnSignalsDeleteLast()
+            } label: {
+                Label("Delete", systemImage: "delete.left")
+            }
+            .buttonStyle(MorsePathLearnSignalsSecondaryButtonStyle())
 
             Button("Check") {
                 MorsePathLearnSignalsViewModel.MorsePathLearnSignalsCheck()
             }
-            .buttonStyle(MorsePathLearnSignalsPrimaryButtonStyle())
+            .buttonStyle(MorsePathLearnSignalsSecondaryButtonStyle())
         }
     }
 
@@ -218,9 +328,10 @@ private struct MorsePathLearnSignalsTranslatorSection: View {
     @ObservedObject var MorsePathLearnSignalsViewModel:
         MorsePathLearnSignalsPracticeViewModel
     var MorsePathLearnSignalsTranslationEditorIsFocused: FocusState<Bool>.Binding
+    let MorsePathLearnSignalsUsesCompactLayout: Bool
 
     var body: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: MorsePathLearnSignalsUsesCompactLayout ? 7 : 9) {
             Picker(
                 "Translation mode",
                 selection:
@@ -255,10 +366,11 @@ private struct MorsePathLearnSignalsTranslatorSection: View {
                 )
                 .font(MorsePathLearnSignalsTypography.MorsePathLearnSignalsBody)
                 .focused(MorsePathLearnSignalsTranslationEditorIsFocused)
-                .scrollContentBackground(.hidden)
-                .frame(minHeight: 74, maxHeight: 96)
+                .frame(
+                    height: MorsePathLearnSignalsUsesCompactLayout ? 54 : 66
+                )
             }
-            .padding(12)
+            .padding(MorsePathLearnSignalsUsesCompactLayout ? 8 : 10)
             .background(MorsePathLearnSignalsTheme.MorsePathLearnSignalsCard)
             .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
             .overlay {
@@ -269,8 +381,7 @@ private struct MorsePathLearnSignalsTranslatorSection: View {
                     )
             }
 
-            MorsePathLearnSignalsCard {
-                VStack(alignment: .leading, spacing: 10) {
+            VStack(alignment: .leading, spacing: 6) {
                     HStack {
                         Text("Live translation")
                             .font(
@@ -328,7 +439,7 @@ private struct MorsePathLearnSignalsTranslatorSection: View {
                         .font(
                             MorsePathLearnSignalsViewModel
                                 .MorsePathLearnSignalsTranslationMode == .textToMorse
-                            ? .system(.body, design: .monospaced, weight: .semibold)
+                            ? .system(size: 17, weight: .semibold, design: .monospaced)
                             : MorsePathLearnSignalsTypography
                                 .MorsePathLearnSignalsDemiBold(18)
                         )
@@ -336,7 +447,20 @@ private struct MorsePathLearnSignalsTranslatorSection: View {
                         .frame(maxWidth: .infinity, alignment: .leading)
                     }
                 }
-                .frame(minHeight: 64, alignment: .top)
+            .padding(MorsePathLearnSignalsUsesCompactLayout ? 11 : 14)
+            .frame(
+                maxWidth: .infinity,
+                minHeight: MorsePathLearnSignalsUsesCompactLayout ? 68 : 76,
+                alignment: .top
+            )
+            .background(MorsePathLearnSignalsTheme.MorsePathLearnSignalsCard)
+            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+            .overlay {
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .stroke(
+                        MorsePathLearnSignalsTheme.MorsePathLearnSignalsCardBorder,
+                        lineWidth: 1
+                    )
             }
         }
     }
@@ -360,8 +484,8 @@ private struct MorsePathLearnSignalsInputDock: View {
             )
         }
         .padding(.horizontal, 18)
-        .padding(.top, 10)
-        .padding(.bottom, 8)
+        .padding(.top, 7)
+        .padding(.bottom, 6)
         .background(.ultraThinMaterial)
         .overlay(alignment: .top) {
             Divider()
@@ -380,7 +504,7 @@ private struct MorsePathLearnSignalsDockButton: View {
                 .font(.system(size: 34, weight: .bold, design: .monospaced))
                 .foregroundStyle(.white)
                 .frame(maxWidth: .infinity)
-                .frame(height: 52)
+                .frame(height: 48)
                 .background(
                     MorsePathLearnSignalsTheme.MorsePathLearnSignalsButtonGradient
                 )

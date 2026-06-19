@@ -10,6 +10,9 @@ final class MorsePathLearnSignalsProgressService: ObservableObject {
     @Published private(set) var MorsePathLearnSignalsMistakes: Int
     @Published private(set) var MorsePathLearnSignalsBestStreak: Int
     @Published private(set) var MorsePathLearnSignalsCurrentStreak: Int
+    @Published private(set) var MorsePathLearnSignalsQuizMistakesBySymbol: [String: Int]
+    @Published private(set) var MorsePathLearnSignalsQuizBestScores: [String: Int]
+    @Published private(set) var MorsePathLearnSignalsCompletedQuizSessions: Int
 
     private let MorsePathLearnSignalsDefaults: UserDefaults
 
@@ -20,6 +23,12 @@ final class MorsePathLearnSignalsProgressService: ObservableObject {
         static let MorsePathLearnSignalsMistakes = "MorsePathLearnSignals.mistakes"
         static let MorsePathLearnSignalsBestStreak = "MorsePathLearnSignals.bestStreak"
         static let MorsePathLearnSignalsCurrentStreak = "MorsePathLearnSignals.currentStreak"
+        static let MorsePathLearnSignalsQuizMistakesBySymbol =
+            "MorsePathLearnSignals.quiz.mistakesBySymbol"
+        static let MorsePathLearnSignalsQuizBestScores =
+            "MorsePathLearnSignals.quiz.bestScores"
+        static let MorsePathLearnSignalsCompletedQuizSessions =
+            "MorsePathLearnSignals.quiz.completedSessions"
     }
 
     init(MorsePathLearnSignalsDefaults: UserDefaults = .standard) {
@@ -43,6 +52,17 @@ final class MorsePathLearnSignalsProgressService: ObservableObject {
         )
         MorsePathLearnSignalsCurrentStreak = MorsePathLearnSignalsDefaults.integer(
             forKey: MorsePathLearnSignalsKey.MorsePathLearnSignalsCurrentStreak
+        )
+        MorsePathLearnSignalsQuizMistakesBySymbol =
+            MorsePathLearnSignalsDefaults.dictionary(
+                forKey: MorsePathLearnSignalsKey.MorsePathLearnSignalsQuizMistakesBySymbol
+            ) as? [String: Int] ?? [:]
+        MorsePathLearnSignalsQuizBestScores =
+            MorsePathLearnSignalsDefaults.dictionary(
+                forKey: MorsePathLearnSignalsKey.MorsePathLearnSignalsQuizBestScores
+            ) as? [String: Int] ?? [:]
+        MorsePathLearnSignalsCompletedQuizSessions = MorsePathLearnSignalsDefaults.integer(
+            forKey: MorsePathLearnSignalsKey.MorsePathLearnSignalsCompletedQuizSessions
         )
     }
 
@@ -70,6 +90,64 @@ final class MorsePathLearnSignalsProgressService: ObservableObject {
         MorsePathLearnSignalsPersistStatistics()
     }
 
+    func MorsePathLearnSignalsSaveQuizAnswer(
+        MorsePathLearnSignalsSymbol: String,
+        MorsePathLearnSignalsIsCorrect: Bool
+    ) {
+        guard !MorsePathLearnSignalsIsCorrect else { return }
+        MorsePathLearnSignalsQuizMistakesBySymbol[MorsePathLearnSignalsSymbol, default: 0] += 1
+        MorsePathLearnSignalsDefaults.set(
+            MorsePathLearnSignalsQuizMistakesBySymbol,
+            forKey: MorsePathLearnSignalsKey.MorsePathLearnSignalsQuizMistakesBySymbol
+        )
+    }
+
+    func MorsePathLearnSignalsSaveQuizSession(
+        MorsePathLearnSignalsResult: MorsePathLearnSignalsQuizResult
+    ) {
+        MorsePathLearnSignalsCompletedQuizSessions += 1
+        let MorsePathLearnSignalsScoreKey = MorsePathLearnSignalsQuizScoreKey(
+            MorsePathLearnSignalsMode: MorsePathLearnSignalsResult.MorsePathLearnSignalsMode,
+            MorsePathLearnSignalsCategory:
+                MorsePathLearnSignalsResult.MorsePathLearnSignalsCategory
+        )
+        MorsePathLearnSignalsQuizBestScores[MorsePathLearnSignalsScoreKey] = max(
+            MorsePathLearnSignalsQuizBestScores[MorsePathLearnSignalsScoreKey] ?? 0,
+            MorsePathLearnSignalsResult.MorsePathLearnSignalsCorrectAnswers
+        )
+        MorsePathLearnSignalsDefaults.set(
+            MorsePathLearnSignalsCompletedQuizSessions,
+            forKey: MorsePathLearnSignalsKey.MorsePathLearnSignalsCompletedQuizSessions
+        )
+        MorsePathLearnSignalsDefaults.set(
+            MorsePathLearnSignalsQuizBestScores,
+            forKey: MorsePathLearnSignalsKey.MorsePathLearnSignalsQuizBestScores
+        )
+    }
+
+    func MorsePathLearnSignalsQuizBestScore(
+        MorsePathLearnSignalsMode: MorsePathLearnSignalsQuizMode,
+        MorsePathLearnSignalsCategory: MorsePathLearnSignalsLearnCategory
+    ) -> Int {
+        MorsePathLearnSignalsQuizBestScores[
+            MorsePathLearnSignalsQuizScoreKey(
+                MorsePathLearnSignalsMode: MorsePathLearnSignalsMode,
+                MorsePathLearnSignalsCategory: MorsePathLearnSignalsCategory
+            )
+        ] ?? 0
+    }
+
+    var MorsePathLearnSignalsMostDifficultQuizSymbols: [(String, Int)] {
+        MorsePathLearnSignalsQuizMistakesBySymbol
+            .filter { $0.value > 0 }
+            .sorted {
+                if $0.value == $1.value {
+                    return $0.key < $1.key
+                }
+                return $0.value > $1.value
+            }
+    }
+
     func MorsePathLearnSignalsResetProgress() {
         MorsePathLearnSignalsLearnedSymbols = []
         MorsePathLearnSignalsPracticeAttempts = 0
@@ -77,6 +155,9 @@ final class MorsePathLearnSignalsProgressService: ObservableObject {
         MorsePathLearnSignalsMistakes = 0
         MorsePathLearnSignalsBestStreak = 0
         MorsePathLearnSignalsCurrentStreak = 0
+        MorsePathLearnSignalsQuizMistakesBySymbol = [:]
+        MorsePathLearnSignalsQuizBestScores = [:]
+        MorsePathLearnSignalsCompletedQuizSessions = 0
 
         [
             MorsePathLearnSignalsKey.MorsePathLearnSignalsLearnedSymbols,
@@ -84,8 +165,18 @@ final class MorsePathLearnSignalsProgressService: ObservableObject {
             MorsePathLearnSignalsKey.MorsePathLearnSignalsCorrectAttempts,
             MorsePathLearnSignalsKey.MorsePathLearnSignalsMistakes,
             MorsePathLearnSignalsKey.MorsePathLearnSignalsBestStreak,
-            MorsePathLearnSignalsKey.MorsePathLearnSignalsCurrentStreak
+            MorsePathLearnSignalsKey.MorsePathLearnSignalsCurrentStreak,
+            MorsePathLearnSignalsKey.MorsePathLearnSignalsQuizMistakesBySymbol,
+            MorsePathLearnSignalsKey.MorsePathLearnSignalsQuizBestScores,
+            MorsePathLearnSignalsKey.MorsePathLearnSignalsCompletedQuizSessions
         ].forEach(MorsePathLearnSignalsDefaults.removeObject)
+    }
+
+    private func MorsePathLearnSignalsQuizScoreKey(
+        MorsePathLearnSignalsMode: MorsePathLearnSignalsQuizMode,
+        MorsePathLearnSignalsCategory: MorsePathLearnSignalsLearnCategory
+    ) -> String {
+        "\(MorsePathLearnSignalsMode.rawValue)|\(MorsePathLearnSignalsCategory.rawValue)"
     }
 
     private func MorsePathLearnSignalsPersistStatistics() {

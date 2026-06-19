@@ -41,6 +41,35 @@ final class MorsePathLearnSignalsSoundService {
         }
     }
 
+    func MorsePathLearnSignalsStartContinuousTone() {
+        MorsePathLearnSignalsStop()
+        MorsePathLearnSignalsConfigureAudioIfNeeded()
+
+        let MorsePathLearnSignalsFormat =
+            MorsePathLearnSignalsAudioEngine.mainMixerNode.outputFormat(forBus: 0)
+        guard let MorsePathLearnSignalsBuffer = MorsePathLearnSignalsMakeBuffer(
+            duration: 0.12,
+            sampleRate: MorsePathLearnSignalsFormat.sampleRate,
+            format: MorsePathLearnSignalsFormat,
+            isSilent: false
+        ) else { return }
+
+        MorsePathLearnSignalsPlayerNode.scheduleBuffer(
+            MorsePathLearnSignalsBuffer,
+            at: nil,
+            options: .loops
+        )
+
+        do {
+            try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default)
+            try AVAudioSession.sharedInstance().setActive(true)
+            try MorsePathLearnSignalsAudioEngine.start()
+            MorsePathLearnSignalsPlayerNode.play()
+        } catch {
+            MorsePathLearnSignalsStop()
+        }
+    }
+
     func MorsePathLearnSignalsStop() {
         MorsePathLearnSignalsPlayerNode.stop()
         MorsePathLearnSignalsAudioEngine.pause()

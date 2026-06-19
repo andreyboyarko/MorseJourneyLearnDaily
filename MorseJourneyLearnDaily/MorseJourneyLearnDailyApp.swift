@@ -6,11 +6,13 @@
 //
 
 import SwiftUI
+import UIKit
 
 @main
 struct MorsePathLearnSignalsApp: App {
     init() {
         MorsePathLearnSignalsTheme.MorsePathLearnSignalsConfigureNavigationAppearance()
+        UITextView.appearance().backgroundColor = .clear
     }
 
     var body: some Scene {

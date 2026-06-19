@@ -17,6 +17,11 @@ struct MorsePathLearnSignalsRootView: View {
                         Label("Practice", systemImage: "hand.tap.fill")
                     }
 
+                MorsePathLearnSignalsQuizView()
+                    .tabItem {
+                        Label("Quiz", systemImage: "brain.head.profile")
+                    }
+
                 MorsePathLearnSignalsSignalView()
                     .tabItem {
                         Label("Signal", systemImage: "flashlight.on.fill")

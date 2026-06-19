@@ -77,6 +77,56 @@ struct MorsePathLearnSignalsMorseItem: Identifiable, Hashable {
     }
 }
 
+enum MorsePathLearnSignalsQuizMode: String, CaseIterable, Identifiable {
+    case mixed = "Mixed Training"
+    case listening = "Listening"
+
+    var id: String { rawValue }
+
+    var MorsePathLearnSignalsIcon: String {
+        switch self {
+        case .mixed: return "square.grid.2x2.fill"
+        case .listening: return "ear.fill"
+        }
+    }
+}
+
+enum MorsePathLearnSignalsQuizQuestionType: String, CaseIterable {
+    case recognizeCode
+    case enterCode
+    case listening
+}
+
+struct MorsePathLearnSignalsQuizQuestion: Identifiable, Equatable {
+    let id = UUID()
+    let MorsePathLearnSignalsType: MorsePathLearnSignalsQuizQuestionType
+    let MorsePathLearnSignalsItem: MorsePathLearnSignalsMorseItem
+    let MorsePathLearnSignalsOptions: [String]
+}
+
+struct MorsePathLearnSignalsQuizMistake: Identifiable, Equatable {
+    let id = UUID()
+    let MorsePathLearnSignalsSymbol: String
+    let MorsePathLearnSignalsCode: String
+    let MorsePathLearnSignalsAnswer: String
+}
+
+struct MorsePathLearnSignalsQuizResult: Equatable {
+    let MorsePathLearnSignalsMode: MorsePathLearnSignalsQuizMode
+    let MorsePathLearnSignalsCategory: MorsePathLearnSignalsLearnCategory
+    let MorsePathLearnSignalsCorrectAnswers: Int
+    let MorsePathLearnSignalsTotalQuestions: Int
+    let MorsePathLearnSignalsMistakes: [MorsePathLearnSignalsQuizMistake]
+
+    var MorsePathLearnSignalsAccuracy: Int {
+        guard MorsePathLearnSignalsTotalQuestions > 0 else { return 0 }
+        return Int(
+            (Double(MorsePathLearnSignalsCorrectAnswers)
+                / Double(MorsePathLearnSignalsTotalQuestions) * 100).rounded()
+        )
+    }
+}
+
 struct MorsePathLearnSignalsMorseDictionary {
     static let MorsePathLearnSignalsLetters: [String: String] = [
         "A": ".-", "B": "-...", "C": "-.-.", "D": "-..", "E": ".",

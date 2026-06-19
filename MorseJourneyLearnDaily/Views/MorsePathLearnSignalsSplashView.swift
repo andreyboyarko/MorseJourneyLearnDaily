@@ -9,52 +9,62 @@ struct MorsePathLearnSignalsSplashView: View {
             MorsePathLearnSignalsTheme.MorsePathLearnSignalsSplashGradient
             .ignoresSafeArea()
 
-            VStack(spacing: 24) {
+            VStack(spacing: 18) {
                 Spacer()
 
                 ZStack {
                     Circle()
-                        .stroke(Color.white.opacity(0.34), lineWidth: 3)
-                        .frame(width: 286, height: 286)
+                        .stroke(Color.white.opacity(0.22), lineWidth: 2)
+                        .frame(width: 354, height: 354)
                         .scaleEffect(
                             MorsePathLearnSignalsViewModel.MorsePathLearnSignalsIsLogoLit
-                                ? 1.08
-                                : 1
+                                ? 1.04
+                                : 0.94
                         )
                         .opacity(
                             MorsePathLearnSignalsViewModel.MorsePathLearnSignalsIsLogoLit
-                                ? 1
-                                : 0.58
+                                ? 0.9
+                                : 0.28
                         )
 
                     Circle()
-                        .fill(Color.white.opacity(0.14))
-                        .frame(width: 252, height: 252)
-
-                    Image("morzeLogo")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 218, height: 218)
+                        .stroke(Color.white.opacity(0.12), lineWidth: 1.5)
+                        .frame(width: 316, height: 316)
                         .scaleEffect(
                             MorsePathLearnSignalsViewModel.MorsePathLearnSignalsIsLogoLit
-                                ? 1.06
+                                ? 1.03
                                 : 0.96
                         )
                         .opacity(
                             MorsePathLearnSignalsViewModel.MorsePathLearnSignalsIsLogoLit
+                                ? 0.72
+                                : 0.18
+                        )
+
+                    Image("morzeLogo")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 360, height: 360)
+                        .scaleEffect(
+                            MorsePathLearnSignalsViewModel.MorsePathLearnSignalsIsLogoLit
+                                ? 1.02
+                                : 0.98
+                        )
+                        .opacity(
+                            MorsePathLearnSignalsViewModel.MorsePathLearnSignalsIsLogoLit
                                 ? 1
-                                : 0.68
+                                : 0.78
                         )
                 }
                 .shadow(
                     color: Color.white.opacity(
                         MorsePathLearnSignalsViewModel.MorsePathLearnSignalsIsLogoLit
-                            ? 0.5
-                            : 0.12
+                            ? 0.3
+                            : 0
                     ),
                     radius: MorsePathLearnSignalsViewModel.MorsePathLearnSignalsIsLogoLit
-                        ? 28
-                        : 10
+                        ? 22
+                        : 0
                 )
                 .animation(
                     .easeInOut(duration: 0.08),
